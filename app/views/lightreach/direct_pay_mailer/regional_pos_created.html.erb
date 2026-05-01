@@ -1,0 +1,50 @@
+<h2>Lightreach Direct Pay Purchase Orders Created - <%= @region %></h2>
+
+<p><strong>Region:</strong> <%= @region %></p>
+<p><strong>Total Projects:</strong> <%= @total_projects %></p>
+<p><strong>Generated:</strong> <%= @generated_at.strftime('%B %d, %Y at %I:%M %p') %></p>
+
+<p style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 10px; margin: 15px 0;"><strong>Note:</strong> Equipment should be shipped to the warehouse for each location, not to the job site.</p>
+
+<hr>
+
+<h3>Purchase Order Details</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f0f0f0;">
+      <th>Project Name</th>
+      <th>Project ID</th>
+      <th>PO ID</th>
+      <th>Items</th>
+      <th>Materials Needed By</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @created_pos.each do |po_data| %>
+      <tr>
+        <td><%= po_data[:project_name] %></td>
+        <td><%= po_data[:project_id] %></td>
+        <td><%= po_data[:po_id] %></td>
+        <td><%= po_data[:po_items].sum { |item| item[:quantity] } %></td>
+        <td><%= po_data[:job_start].present? ? Time.parse(po_data[:job_start]).strftime('%B %d, %Y') : 'N/A' %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<hr>
+
+<h3>Attachments</h3>
+
+<h4>Region Summary PDF</h4>
+<ul>
+  <li><strong>Lightreach_Direct_Pay_<%= @region.gsub(' ', '_') %>_Summary.pdf</strong> - Aggregated summary for <%= @region %> (<%= @total_projects %> projects)</li>
+</ul>
+
+<h4>Individual PO PDFs</h4>
+<ul>
+  <% @created_pos.each do |po_data| %>
+    <li>PO_<%= po_data[:po_id] %>_<%= po_data[:project_id] %>.pdf - Individual PO for <%= po_data[:project_name] %></li>
+  <% end %>
+</ul>

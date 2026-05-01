@@ -1,0 +1,42 @@
+<h2>Lightreach Direct Pay Purchase Order Created</h2>
+
+<p><strong>Project Name:</strong> <%= @po_data[:project_name] %></p>
+<p><strong>Project ID:</strong> <%= @po_data[:project_id] %></p>
+<p><strong>PO ID:</strong> <%= @po_data[:po_id] %></p>
+<p><strong>Location:</strong> <%= @po_data[:location_name] %></p>
+<p><strong>Generated:</strong> <%= @generated_at.strftime('%B %d, %Y at %I:%M %p') %></p>
+
+<p style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 10px; margin: 15px 0;"><strong>Note:</strong> Equipment should be shipped to the warehouse for this location, not to the job site.</p>
+
+<hr>
+
+<h3>PO Details</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f0f0f0;">
+      <th>Part Number</th>
+      <th>Description</th>
+      <th>Quantity</th>
+      <th>Category</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @po_data[:po_items].each do |item| %>
+      <tr>
+        <td><%= item[:part_number] %></td>
+        <td><%= item[:description] %></td>
+        <td><%= item[:quantity] %></td>
+        <td><%= item[:category_name] || 'Other' %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<hr>
+
+<h3>Attachment</h3>
+
+<ul>
+  <li>PO_<%= @po_data[:po_id] %>_<%= @po_data[:project_id] %>.pdf - Purchase Order for <%= @po_data[:project_name] %></li>
+</ul>
