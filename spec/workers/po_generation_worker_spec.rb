@@ -12,6 +12,7 @@ RSpec.describe PoGenerationWorker, type: :worker do
   before do
     allow(PoGenerationService).to receive(:new).and_return(service)
     allow(EmailNotificationService).to receive(:new).and_return(email_service)
+    allow(service).to receive(:log_progress)  # Allow log_progress calls
   end
 
   describe '#perform' do
@@ -25,7 +26,7 @@ RSpec.describe PoGenerationWorker, type: :worker do
 
     before do
       allow(service).to receive(:generate_po_for_project).and_return(po_result)
-      allow(email_service).to receive(:send_batch_email)
+      allow(email_service).to receive(:send_single_email)
     end
 
     it 'updates job status to running' do
@@ -52,13 +53,13 @@ RSpec.describe PoGenerationWorker, type: :worker do
     end
 
     it 'sends email notification' do
-      expect(email_service).to receive(:send_batch_email)
+      expect(email_service).to receive(:send_single_email).with(po_result)
       described_class.new.perform(job.id)
     end
 
     context 'with skip_email option' do
       it 'does not send email when skip_email is true' do
-        expect(email_service).not_to receive(:send_batch_email)
+        expect(email_service).not_to receive(:send_single_email)
         described_class.new.perform(job.id, true)
       end
 
@@ -83,7 +84,7 @@ RSpec.describe PoGenerationWorker, type: :worker do
       end
 
       it 'does not send email' do
-        expect(email_service).not_to receive(:send_batch_email)
+        expect(email_service).not_to receive(:send_single_email)
         described_class.new.perform(job.id)
       end
     end
@@ -123,7 +124,7 @@ RSpec.describe PoGenerationWorker, type: :worker do
     before do
       allow(worker).to receive(:jid).and_return(jid)
       allow(service).to receive(:generate_po_for_project).and_return({})
-      allow(email_service).to receive(:send_batch_email)
+      allow(email_service).to receive(:send_single_email)
     end
 
     it 'locks job during processing' do
