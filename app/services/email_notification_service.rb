@@ -39,7 +39,7 @@ class EmailNotificationService
         po_pdfs: region_po_pdfs,
         summary_pdf: region_summary_pdf,
         test_mode: test_mode
-      ).deliver_now
+      ).send_google
 
       Rails.logger.info "Sent PO email for region #{region} with #{region_pos.length} projects"
     end
@@ -62,7 +62,7 @@ class EmailNotificationService
       po_data: po_result,
       pdf_binary: pdf_binary,
       cc_email: cc_email
-    ).deliver_now
+    ).send_google
 
     Rails.logger.info "Sent single PO email for project #{po_result[:project_id]}"
   rescue StandardError => e

@@ -35,6 +35,9 @@ gem "mime-types"
 gem "faraday", "~> 0.17"
 gem "faraday_middleware", "0.14.0"
 
+# Google APIs for service account email sending
+gem 'google-apis-gmail_v1', '~> 0.1'
+
 # Error tracking
 gem "sentry-ruby"
 gem "sentry-rails"
