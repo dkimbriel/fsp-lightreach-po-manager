@@ -11,16 +11,16 @@ module Lightreach
             set_credentials
             @access_token = fetch_access_token
             @headers = {
-                'Authorization' => "Bearer #{@access_token}",
-                'Content-Type' => 'application/json'
+                "Authorization" => "Bearer #{@access_token}",
+                "Content-Type" => "application/json"
             }
         end
 
         def set_urls
-            @base_url = 'https://next.palmetto.finance/api'
-            @auth_uri = URI('https://next.palmetto.finance/api/auth/login')
-            @base_url = 'https://palmetto.finance/api' if Rails.env.production?
-            @auth_uri = URI('https://palmetto.finance/api/auth/login') if Rails.env.production?
+            @base_url = "https://next.palmetto.finance/api"
+            @auth_uri = URI("https://next.palmetto.finance/api/auth/login")
+            @base_url = "https://palmetto.finance/api" if Rails.env.production?
+            @auth_uri = URI("https://palmetto.finance/api/auth/login") if Rails.env.production?
         end
 
         def set_credentials
@@ -33,7 +33,7 @@ module Lightreach
         def fetch_access_token
             body = { username: @username, password: @password }
             response = HttpVerb.post(@auth_uri, body)
-            parse_response(response, @auth_uri.to_s, body)['access_token']
+            parse_response(response, @auth_uri.to_s, body)["access_token"]
         end
 
         def get(path)
@@ -63,7 +63,7 @@ module Lightreach
 
             if response.nil?
                 Sentry.capture_message(
-                    'Lightreach API: nil response',
+                    "Lightreach API: nil response",
                     level: :error,
                     extra: sentry_context(uri, request_body, nil, nil)
                 )
@@ -96,7 +96,7 @@ module Lightreach
         end
 
         def check_for_error(response, path, body)
-            return unless response.is_a?(Hash) && response['error'].present?
+            return unless response.is_a?(Hash) && response["error"].present?
 
             Sentry.capture_message(
                 "Lightreach API error: #{response['error']}",
@@ -172,14 +172,14 @@ module Lightreach
     class EstimatedPricing
         def self.create(body)
             client = Lightreach::Client.new
-            client.post('/v3/estimated-pricing', body)
+            client.post("/v3/estimated-pricing", body)
         end
 
         def self.test
             create(
                 {
                     lseId: 3010,
-                    state: 'TX',
+                    state: "TX",
                     systemSizeKw: 9.3,
                     systemFirstYearProductionKwh: 12000,
                     electricalUpgradeIncluded: false

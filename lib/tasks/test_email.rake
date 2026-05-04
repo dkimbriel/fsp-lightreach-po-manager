@@ -7,9 +7,9 @@ namespace :email do
     class TestMailer < ApplicationMailer
       def test_email
         mail(
-          to: 'dkimbriel@gofreedompower.com',
-          from: 'project_sunrise@gofreedompower.com',
-          subject: '[TEST] Google Service Account Email Test',
+          to: "dkimbriel@gofreedompower.com",
+          from: "project_sunrise@gofreedompower.com",
+          subject: "[TEST] Google Service Account Email Test",
           body: "This is a test email sent via Google service account at #{Time.now}.\n\nIf you receive this, the email configuration is working correctly!"
         )
       end
@@ -27,7 +27,7 @@ namespace :email do
       puts e.backtrace.first(5).map { |line| "    #{line}" }.join("\n")
 
       # Check for common issues
-      if e.message.include?('credentials')
+      if e.message.include?("credentials")
         puts "\n  ⚠ This looks like a credentials issue."
         puts "    Make sure you've set up Rails credentials with:"
         puts "    - google_project_id"
@@ -35,7 +35,7 @@ namespace :email do
         puts "    - google_private_key_id"
         puts "    - google_private_key"
         puts "    - google_client_id"
-      elsif e.message.include?('delegation')
+      elsif e.message.include?("delegation")
         puts "\n  ⚠ This looks like a domain delegation issue."
         puts "    Make sure your service account has domain-wide delegation"
         puts "    and the required Gmail API scopes are authorized."

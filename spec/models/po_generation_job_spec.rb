@@ -23,13 +23,13 @@ RSpec.describe PoGenerationJob, type: :model do
     end
 
     it 'stores project_ids as array' do
-      job = create(:po_generation_job, project_ids: ['SF-001', 'SF-002'])
+      job = create(:po_generation_job, project_ids: [ 'SF-001', 'SF-002' ])
       expect(job.project_ids).to be_an(Array)
       expect(job.project_ids).to contain_exactly('SF-001', 'SF-002')
     end
 
     it 'stores po_results as JSON' do
-      results = [{ po_id: 12345, project_id: 'SF-001' }]
+      results = [ { po_id: 12345, project_id: 'SF-001' } ]
       job = create(:po_generation_job, po_results: results)
       expect(job.po_results).to be_an(Array)
       expect(job.po_results.first['po_id']).to eq(12345)
@@ -88,13 +88,13 @@ RSpec.describe PoGenerationJob, type: :model do
 
   describe '.locked_project_ids' do
     context 'with multiple running jobs' do
-      let!(:job1) { create(:po_generation_job, :running, project_ids: ['proj_1', 'proj_2']) }
-      let!(:job2) { create(:po_generation_job, :running, project_ids: ['proj_3', 'proj_1']) }
-      let!(:completed_job) { create(:po_generation_job, :completed, project_ids: ['proj_4']) }
+      let!(:job1) { create(:po_generation_job, :running, project_ids: [ 'proj_1', 'proj_2' ]) }
+      let!(:job2) { create(:po_generation_job, :running, project_ids: [ 'proj_3', 'proj_1' ]) }
+      let!(:completed_job) { create(:po_generation_job, :completed, project_ids: [ 'proj_4' ]) }
 
       it 'returns unique project IDs from all running jobs' do
         locked_ids = PoGenerationJob.locked_project_ids
-        expect(locked_ids).to match_array(['proj_1', 'proj_2', 'proj_3'])
+        expect(locked_ids).to match_array([ 'proj_1', 'proj_2', 'proj_3' ])
       end
 
       it 'does not include project IDs from completed jobs' do
@@ -206,10 +206,10 @@ RSpec.describe PoGenerationJob, type: :model do
     describe '.locked_project_ids with nil project_ids' do
       it 'handles jobs with nil project_ids' do
         create(:po_generation_job, :running, project_ids: nil)
-        create(:po_generation_job, :running, project_ids: ['proj_1'])
+        create(:po_generation_job, :running, project_ids: [ 'proj_1' ])
 
         locked_ids = PoGenerationJob.locked_project_ids
-        expect(locked_ids).to eq(['proj_1'])
+        expect(locked_ids).to eq([ 'proj_1' ])
       end
     end
 

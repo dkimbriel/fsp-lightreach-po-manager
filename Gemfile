@@ -38,7 +38,7 @@ gem "faraday_middleware-aws-sigv4", "0.5.0"  # For AWS signed requests
 gem "elasticsearch", "~> 7.4"  # For Project Sunrise API
 
 # Google APIs for service account email sending
-gem 'google-apis-gmail_v1', '~> 0.1'
+gem "google-apis-gmail_v1", "~> 0.1"
 
 # Error tracking
 gem "sentry-ruby"

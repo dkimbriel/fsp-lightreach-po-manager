@@ -8,11 +8,11 @@ class JobScheduleService
 
     if region
       # Batch fetch all sales orders to avoid N+1 queries
-      project_ids = direct_pay_projects.map { |p| p['_id'] }
+      project_ids = direct_pay_projects.map { |p| p["_id"] }
       location_map = batch_fetch_project_locations(project_ids)
 
       filtered = direct_pay_projects.select do |project|
-        location_name = location_map[project['_id']]
+        location_name = location_map[project["_id"]]
         Rails.logger.info "[JobScheduleService] Project #{project['_id']}: location_name=#{location_name}, target_region=#{region}, match=#{location_name == region}"
         location_name == region
       end
@@ -31,8 +31,8 @@ class JobScheduleService
     start_time = Time.now.beginning_of_day
     end_time = (Time.now + 1.week).end_of_week
 
-    installation_jobs = SkeduloApi.find_jobs('Installation', start_time: start_time, end_time: end_time)
-    powerwall_jobs = SkeduloApi.find_jobs('Tesla Powerwall', start_time: start_time, end_time: end_time)
+    installation_jobs = SkeduloApi.find_jobs("Installation", start_time: start_time, end_time: end_time)
+    powerwall_jobs = SkeduloApi.find_jobs("Tesla Powerwall", start_time: start_time, end_time: end_time)
 
     installation_jobs + powerwall_jobs
   end
@@ -41,39 +41,39 @@ class JobScheduleService
     # Build mapping of project_id to job start date
     job_start_by_project = {}
     jobs.each do |job|
-      project_id = job.dig('node', 'ProjectSunriseID')
+      project_id = job.dig("node", "ProjectSunriseID")
       next unless project_id
 
-      start_date = job.dig('node', 'Start')
+      start_date = job.dig("node", "Start")
       if start_date && (!job_start_by_project[project_id] || start_date < job_start_by_project[project_id])
         job_start_by_project[project_id] = start_date
       end
     end
 
-    project_ids = jobs.map { |job| job['node']['ProjectSunriseID'] }.compact.uniq
+    project_ids = jobs.map { |job| job["node"]["ProjectSunriseID"] }.compact.uniq
     return [] if project_ids.empty?
 
     fields = [
-      'fields.lender',
-      'fields.lightreach_direct_pay',
-      'fields.lightreach_direct_pay_po_link',
-      'name',
-      'fields.loan_application_id',
-      'fields.market_region',
-      'fields.system_size'
+      "fields.lender",
+      "fields.lightreach_direct_pay",
+      "fields.lightreach_direct_pay_po_link",
+      "name",
+      "fields.loan_application_id",
+      "fields.market_region",
+      "fields.system_size"
     ]
 
     result = ProjectSunriseApi.get_projects_bulk(project_ids, fields: fields)
-    projects = result['items'] || []
+    projects = result["items"] || []
 
     # Filter for Lightreach direct pay projects
     filtered = projects.select do |project|
-      project.dig('fields', 'lender') == 'Lightreach Lease'
+      project.dig("fields", "lender") == "Lightreach Lease"
     end
 
     # Add job start date to each project
     filtered.each do |project|
-      project['job_start'] = job_start_by_project[project['_id']]
+      project["job_start"] = job_start_by_project[project["_id"]]
     end
 
     filtered
@@ -88,7 +88,7 @@ class JobScheduleService
     begin
       # Build SuiteQL query to fetch sales orders with locations
       # Location field is on TransactionLine table, accessed via JOIN
-      external_ids = project_ids.map { |id| "'sales_order_#{id}'" }.join(', ')
+      external_ids = project_ids.map { |id| "'sales_order_#{id}'" }.join(", ")
 
       sql_query = <<-SQL
         SELECT t.externalid, tl.location
@@ -104,17 +104,17 @@ class JobScheduleService
       client = Netsuite::Client.new
       result = client.suiteql(query: sql_query)
 
-      sales_orders = result['items'] || []
+      sales_orders = result["items"] || []
       Rails.logger.info "[JobScheduleService] Found #{sales_orders.length} sales orders from NetSuite"
 
       # Build location map from results
       sales_orders.each do |so|
-        external_id = so['externalid']
+        external_id = so["externalid"]
         Rails.logger.info "[JobScheduleService] Processing SO: externalId=#{external_id.inspect}, location=#{so['location'].inspect}"
-        next unless external_id&.start_with?('sales_order_')
+        next unless external_id&.start_with?("sales_order_")
 
-        project_id = external_id.sub('sales_order_', '')
-        location_id = so['location']
+        project_id = external_id.sub("sales_order_", "")
+        location_id = so["location"]
         location_map[project_id] = location_name_for(location_id)
       end
 
@@ -141,7 +141,7 @@ class JobScheduleService
     # Use NetSuite external ID lookup directly (more reliable than HubSpot)
     external_id = "sales_order_#{project_id}"
     sales_order = Netsuite::SalesOrder.find_external(external_id)
-    sales_order['id']&.to_i
+    sales_order["id"]&.to_i
   rescue StandardError => e
     Rails.logger.error "Error fetching sales order ID for project #{project_id}: #{e.message}"
     nil
@@ -156,29 +156,29 @@ class JobScheduleService
 
     {
       sales_order_id: sales_order_id,
-      customer_id: sales_order.dig('entity', 'id'),
-      internal_project_id: sales_order.dig('job', 'id'),
-      location_id: sales_order.dig('location', 'id'),
-      ship_to_address: sales_order['shipAddress'],
-      so_items: sales_order.dig('item', 'items') || []
+      customer_id: sales_order.dig("entity", "id"),
+      internal_project_id: sales_order.dig("job", "id"),
+      location_id: sales_order.dig("location", "id"),
+      ship_to_address: sales_order["shipAddress"],
+      so_items: sales_order.dig("item", "items") || []
     }
   end
 
   def location_name_for(location_id)
     {
-      1 => 'Austin',
-      2 => 'Houston',
-      3 => 'Dallas',
-      4 => 'San Antonio',
-      5 => 'Denver',
-      6 => 'Co Springs',
-      7 => 'Tampa',
-      17 => 'Norfolk',
-      18 => 'Orlando',
-      19 => 'Charlotte',
-      20 => 'Raleigh',
-      25 => 'HQ',
-      28 => 'Commercial'
+      1 => "Austin",
+      2 => "Houston",
+      3 => "Dallas",
+      4 => "San Antonio",
+      5 => "Denver",
+      6 => "Co Springs",
+      7 => "Tampa",
+      17 => "Norfolk",
+      18 => "Orlando",
+      19 => "Charlotte",
+      20 => "Raleigh",
+      25 => "HQ",
+      28 => "Commercial"
     }[location_id&.to_i] || "Location #{location_id}"
   end
 end

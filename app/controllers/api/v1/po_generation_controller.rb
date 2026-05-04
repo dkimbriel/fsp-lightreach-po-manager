@@ -7,7 +7,7 @@ module Api
         region = params[:region]
 
         if region.blank?
-          return render_error('Region parameter is required', status: :bad_request)
+          return render_error("Region parameter is required", status: :bad_request)
         end
 
         # Check if there's already a running job for this region
@@ -20,9 +20,9 @@ module Api
 
         # Create job record
         job = current_user.po_generation_jobs.create!(
-          job_type: 'region',
+          job_type: "region",
           region: region,
-          status: 'pending',
+          status: "pending",
           total_projects: 0
         )
 
@@ -32,7 +32,7 @@ module Api
         render_success({
           job_id: job.id,
           region: region,
-          status: 'pending',
+          status: "pending",
           message: "PO generation started for #{region}"
         }, status: :created)
       rescue StandardError => e
@@ -45,11 +45,11 @@ module Api
       # Generates PO for a single project
       def generate_single
         project_id = params[:project_id]
-        skip_email = params[:skip_email] == 'true' || params[:skip_email] == true
-        skip_crew_check = params[:skip_crew_check] == 'true' || params[:skip_crew_check] == true
+        skip_email = params[:skip_email] == "true" || params[:skip_email] == true
+        skip_crew_check = params[:skip_crew_check] == "true" || params[:skip_crew_check] == true
 
         if project_id.blank?
-          return render_error('Project ID is required', status: :bad_request)
+          return render_error("Project ID is required", status: :bad_request)
         end
 
         # Check if this project is already being processed
@@ -63,9 +63,9 @@ module Api
 
         # Create job record
         job = current_user.po_generation_jobs.create!(
-          job_type: 'single',
-          project_ids: [project_id],
-          status: 'pending',
+          job_type: "single",
+          project_ids: [ project_id ],
+          status: "pending",
           total_projects: 1,
           skip_email: skip_email
         )
@@ -76,7 +76,7 @@ module Api
         render_success({
           job_id: job.id,
           project_id: project_id,
-          status: 'pending',
+          status: "pending",
           message: "PO generation started for project #{project_id}"
         }, status: :created)
       rescue StandardError => e
@@ -91,7 +91,7 @@ module Api
         project_ids = params[:project_ids]
 
         if project_ids.blank? || !project_ids.is_a?(Array)
-          return render_error('project_ids must be a non-empty array', status: :bad_request)
+          return render_error("project_ids must be a non-empty array", status: :bad_request)
         end
 
         # Check if any projects are already being processed
@@ -111,9 +111,9 @@ module Api
 
         # Create job record
         job = current_user.po_generation_jobs.create!(
-          job_type: 'batch',
+          job_type: "batch",
           project_ids: project_ids,
-          status: 'pending',
+          status: "pending",
           total_projects: project_ids.length
         )
 
@@ -124,7 +124,7 @@ module Api
           job_id: job.id,
           project_ids: project_ids,
           project_count: project_ids.length,
-          status: 'pending',
+          status: "pending",
           message: "PO generation started for #{project_ids.length} projects"
         }, status: :created)
       rescue StandardError => e
@@ -165,7 +165,7 @@ module Api
           logs: logs
         })
       rescue ActiveRecord::RecordNotFound
-        render_error('Job not found', status: :not_found)
+        render_error("Job not found", status: :not_found)
       rescue StandardError => e
         Rails.logger.error("Error fetching job status: #{e.message}")
         render_error("Failed to fetch job status: #{e.message}", status: :internal_server_error)
@@ -177,30 +177,30 @@ module Api
         job_id = params[:id]
 
         if job_id.blank?
-          return render_error('Job ID is required', status: :bad_request)
+          return render_error("Job ID is required", status: :bad_request)
         end
 
         job = PoGenerationJob.find(job_id)
 
         unless job.running? || job.pending?
-          return render_error('Can only cancel pending or running jobs', status: :bad_request)
+          return render_error("Can only cancel pending or running jobs", status: :bad_request)
         end
 
         # Mark job as failed/cancelled
         job.update!(
-          status: 'failed',
-          error_message: 'Job cancelled by user',
+          status: "failed",
+          error_message: "Job cancelled by user",
           completed_at: Time.current,
           locked_at: nil,
           locked_by: nil
         )
 
         render_success({
-          message: 'Job cancelled successfully',
+          message: "Job cancelled successfully",
           job_id: job.id
         })
       rescue ActiveRecord::RecordNotFound
-        render_error('Job not found', status: :not_found)
+        render_error("Job not found", status: :not_found)
       rescue StandardError => e
         Rails.logger.error("Error cancelling job: #{e.message}")
         Rails.logger.error(e.backtrace.join("\n"))
@@ -213,28 +213,28 @@ module Api
         job_id = params[:job_id]
 
         if job_id.blank?
-          return render_error('Job ID is required', status: :bad_request)
+          return render_error("Job ID is required", status: :bad_request)
         end
 
         job = PoGenerationJob.find(job_id)
 
         unless job.completed?
-          return render_error('Can only resend emails for completed jobs', status: :bad_request)
+          return render_error("Can only resend emails for completed jobs", status: :bad_request)
         end
 
         if job.successful_pos.zero?
-          return render_error('No successful POs to send', status: :bad_request)
+          return render_error("No successful POs to send", status: :bad_request)
         end
 
         # Send email
         EmailNotificationService.new(job).send_batch_email
 
         render_success({
-          message: 'Email resent successfully',
+          message: "Email resent successfully",
           job_id: job.id
         })
       rescue ActiveRecord::RecordNotFound
-        render_error('Job not found', status: :not_found)
+        render_error("Job not found", status: :not_found)
       rescue StandardError => e
         Rails.logger.error("Error resending email: #{e.message}")
         Rails.logger.error(e.backtrace.join("\n"))

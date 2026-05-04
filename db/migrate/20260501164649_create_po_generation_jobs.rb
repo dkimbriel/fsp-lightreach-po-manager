@@ -27,7 +27,7 @@ class CreatePoGenerationJobs < ActiveRecord::Migration[7.2]
       t.timestamps
     end
 
-    add_index :po_generation_jobs, [:status, :region]
+    add_index :po_generation_jobs, [ :status, :region ]
     add_index :po_generation_jobs, :locked_at
   end
 end

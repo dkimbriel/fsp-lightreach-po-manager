@@ -5,9 +5,9 @@ class PoGenerationJob < ApplicationRecord
   validates :job_type, inclusion: { in: %w[region batch single] }
   validates :status, inclusion: { in: %w[pending running completed failed] }
 
-  scope :running, -> { where(status: 'running') }
-  scope :pending, -> { where(status: 'pending') }
-  scope :completed, -> { where(status: 'completed') }
+  scope :running, -> { where(status: "running") }
+  scope :pending, -> { where(status: "pending") }
+  scope :completed, -> { where(status: "completed") }
 
   # Check if PO generation is running for a region
   def self.running_for_region?(region)
@@ -24,7 +24,7 @@ class PoGenerationJob < ApplicationRecord
     update_columns(
       locked_at: Time.current,
       locked_by: worker_id,
-      status: 'running',
+      status: "running",
       started_at: Time.current
     )
   end
@@ -34,22 +34,22 @@ class PoGenerationJob < ApplicationRecord
   end
 
   def running?
-    status == 'running'
+    status == "running"
   end
 
   def pending?
-    status == 'pending'
+    status == "pending"
   end
 
   def completed?
-    status == 'completed'
+    status == "completed"
   end
 
   def failed?
-    status == 'failed'
+    status == "failed"
   end
 
   def cancelled?
-    failed? && error_message == 'Job cancelled by user'
+    failed? && error_message == "Job cancelled by user"
   end
 end

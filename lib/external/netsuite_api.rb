@@ -29,7 +29,7 @@ module Netsuite
                 response = HttpVerb.get(uri, headers:, limit: 1)
 
                 # Retry 401 errors with 10-second wait
-                break unless response.code == '401' && attempt < MAX_AUTH_RETRIES - 1
+                break unless response.code == "401" && attempt < MAX_AUTH_RETRIES - 1
 
                 sleep_time = 10
                 Rails.logger.warn "[NetSuite] 401 Unauthorized on GET #{path}, retrying in #{sleep_time}s"
@@ -37,7 +37,7 @@ module Netsuite
             end
 
             unless response.is_a?(Net::HTTPSuccess)
-                raise_netsuite_error(response, method: 'GET', path: path, params: params)
+                raise_netsuite_error(response, method: "GET", path: path, params: params)
             end
 
             JSON.parse(response.body)
@@ -53,7 +53,7 @@ module Netsuite
                 headers = Headers.new(url: uri_string, method: :POST, params:, credentials: @credentials).generate
                 response = HttpVerb.post(uri, body, headers:, limit: 1)
 
-                break unless response.code == '401' && attempt < MAX_AUTH_RETRIES - 1
+                break unless response.code == "401" && attempt < MAX_AUTH_RETRIES - 1
 
                 sleep_time = 10
                 Rails.logger.warn "[NetSuite] 401 Unauthorized on POST #{path}, retrying in #{sleep_time}s"
@@ -62,7 +62,7 @@ module Netsuite
 
             puts "Response: #{response.body}"
             JSON.parse(response.body) if return_method == :body
-            response['Location'].split('/')[-1] if return_method == :id
+            response["Location"].split("/")[-1] if return_method == :id
         end
 
         def patch(path:, body: {}, params: {})
@@ -73,10 +73,10 @@ module Netsuite
             response = nil
             MAX_AUTH_RETRIES.times do |attempt|
                 headers = Headers.new(url: uri_string, method: :PATCH, params:, credentials: @credentials).generate
-                headers['Prefer'] = 'transient.respondOnUpdate=true'
+                headers["Prefer"] = "transient.respondOnUpdate=true"
                 response = HttpVerb.patch(uri, body, headers:, limit: 1)
 
-                break unless response.code == '401' && attempt < MAX_AUTH_RETRIES - 1
+                break unless response.code == "401" && attempt < MAX_AUTH_RETRIES - 1
 
                 sleep_time = 10
                 Rails.logger.warn "[NetSuite] 401 Unauthorized on PATCH #{path}, retrying in #{sleep_time}s"
@@ -95,7 +95,7 @@ module Netsuite
                 headers = Headers.new(url: uri_string, method: :DELETE, params: {}, credentials: @credentials).generate
                 response = HttpVerb.delete(uri, headers:, limit: 1)
 
-                break unless response.code == '401' && attempt < MAX_AUTH_RETRIES - 1
+                break unless response.code == "401" && attempt < MAX_AUTH_RETRIES - 1
 
                 sleep_time = 10
                 Rails.logger.warn "[NetSuite] 401 Unauthorized on DELETE #{path}, retrying in #{sleep_time}s"
@@ -128,7 +128,7 @@ module Netsuite
                 response = HttpVerb.get(uri, headers:, limit: 1)
 
                 unless response.is_a?(Net::HTTPSuccess)
-                    raise_netsuite_error(response, method: 'GET', path: path, params: params)
+                    raise_netsuite_error(response, method: "GET", path: path, params: params)
                 end
 
                 JSON.parse(response.body)
@@ -152,7 +152,7 @@ module Netsuite
         # Filters and queries
 
         def query(object:, query:)
-            get(path: "/record/v1/#{object}", params: { 'q' => query })
+            get(path: "/record/v1/#{object}", params: { "q" => query })
         end
 
         def suiteql(query:, limit: 1000, offset: 0)
@@ -161,7 +161,7 @@ module Netsuite
             params = { limit:, offset: }
             uri.query = URI.encode_www_form(params)
             headers = Headers.new(url: uri_string, method: :POST, params:, credentials: @credentials).generate
-            headers['Prefer'] = 'transient'
+            headers["Prefer"] = "transient"
             response = HttpVerb.post(uri, { q: query }, headers:, limit: 1)
             JSON.parse(response.body)
         end
@@ -195,9 +195,9 @@ module Netsuite
 
             response = if method == :get
                            HttpVerb.get(uri, headers:, limit: 1)
-                       else
+            else
                            HttpVerb.post(uri, params, headers:, limit: 1)
-                       end
+            end
 
             Rails.logger.info "[NetSuite RESTlet] Response code: #{response.code}"
             Rails.logger.info "[NetSuite RESTlet] Response body: #{response.body}"
@@ -208,17 +208,17 @@ module Netsuite
         private
 
         def raise_netsuite_error(response, method:, path:, params: {}, body: nil)
-            Sentry.set_context('netsuite_request', {
+            Sentry.set_context("netsuite_request", {
                 method: method,
                 path: path,
                 params: params,
                 body: body,
                 response_code: response.code,
-                www_authenticate: response['WWW-Authenticate']
+                www_authenticate: response["WWW-Authenticate"]
             })
 
             error_msg = "NetSuite API error #{response.code}: #{response.body}"
-            error_msg += " | WWW-Authenticate: #{response['WWW-Authenticate']}" if response['WWW-Authenticate']
+            error_msg += " | WWW-Authenticate: #{response['WWW-Authenticate']}" if response["WWW-Authenticate"]
             raise error_msg
         end
     end
@@ -244,21 +244,21 @@ module Netsuite
             generate_nonce
             generate_timestamp
             generate_signature_data
-            @digest = OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha256'), @signature_key, @signature_data)
+            @digest = OpenSSL::HMAC.digest(OpenSSL::Digest.new("sha256"), @signature_key, @signature_data)
             @signature = Base64.strict_encode64(@digest)
             authorization_parts = {
                 realm: @account_id,
                 oauth_consumer_key: escape(@consumer_key),
                 oauth_token: escape(@token_id),
-                oauth_signature_method: 'HMAC-SHA256',
+                oauth_signature_method: "HMAC-SHA256",
                 oauth_timestamp: @timestamp,
                 oauth_nonce: escape(@nonce),
-                oauth_version: '1.0',
+                oauth_version: "1.0",
                 oauth_signature: escape(@signature)
             }
 
             @authorization = "OAuth #{authorization_parts.map { |k, v| "#{k}=\"#{v}\"" }.join(',')}"
-            @headers = { 'Authorization' => @authorization }
+            @headers = { "Authorization" => @authorization }
         end
 
         # It may seem like this does a lot of strange stuff, but the sorting of the keys is
@@ -267,26 +267,26 @@ module Netsuite
             oauth_params = {
                 oauth_consumer_key: @consumer_key,
                 oauth_nonce: @nonce,
-                oauth_signature_method: 'HMAC-SHA256',
+                oauth_signature_method: "HMAC-SHA256",
                 oauth_timestamp: @timestamp,
                 oauth_token: @token_id,
-                oauth_version: '1.0'
+                oauth_version: "1.0"
             }
 
             merged_params = @params.merge(oauth_params)
             merged_params.transform_keys!(&:to_sym)
             merged_params = merged_params.sort.to_h
-            params_string = URI.encode_www_form(merged_params).gsub('+', '%20')
+            params_string = URI.encode_www_form(merged_params).gsub("+", "%20")
 
             @signature_data = [
                 @method,
                 escape(@url),
                 escape(params_string)
-            ].join('&')
+            ].join("&")
         end
 
         def generate_nonce
-            @nonce = Array.new(20) { [*'0'..'9', *'A'..'Z', *'a'..'z'].sample }.join
+            @nonce = Array.new(20) { [ *"0".."9", *"A".."Z", *"a".."z" ].sample }.join
         end
 
         def generate_timestamp
@@ -311,7 +311,7 @@ module Netsuite
             params = { offset: 0, limit: 1 }
             params[:q] = query if query
             response = client.list_records(object: @object, params:)
-            response['totalResults'].to_i
+            response["totalResults"].to_i
         end
 
         def self.find_each(query: nil, offset: 0, limit: 1000)
@@ -321,12 +321,12 @@ module Netsuite
                 params = { offset:, limit: }
                 params[:q] = query if query
                 response = client.list_records(object: @object, params:)
-                response['items'].each do |item|
-                    internal_id = item['id']
+                response["items"].each do |item|
+                    internal_id = item["id"]
                     yield(internal_id)
                 end
-                has_more = response['hasMore']
-                offset = response['offset'].to_i + response['count'].to_i
+                has_more = response["hasMore"]
+                offset = response["offset"].to_i + response["count"].to_i
             end
         end
 
@@ -337,10 +337,10 @@ module Netsuite
                 params = { offset:, limit: }
                 params[:q] = query if query
                 response = client.list_records(object: @object, params:)
-                ids = response['items'].map { |item| item['id'] }
+                ids = response["items"].map { |item| item["id"] }
                 yield(ids)
-                has_more = response['hasMore']
-                offset = response['offset'].to_i + response['count'].to_i
+                has_more = response["hasMore"]
+                offset = response["offset"].to_i + response["count"].to_i
             end
         end
 
@@ -354,12 +354,12 @@ module Netsuite
             client.get_record(object: @object, id:, params:, retry_on_401: raise_on_not_found)
         rescue RuntimeError => e
             # Handle 404 errors gracefully if requested
-            if !raise_on_not_found && e.message.include?('404') && e.message.include?('NONEXISTENT_ID')
+            if !raise_on_not_found && e.message.include?("404") && e.message.include?("NONEXISTENT_ID")
                 Rails.logger.warn "[NetSuite] Record not found: #{@object} #{id} (404 NONEXISTENT_ID)"
                 return nil
             end
             # Handle 401 errors when checking record type - item exists but wrong type
-            if !raise_on_not_found && e.message.include?('401')
+            if !raise_on_not_found && e.message.include?("401")
                 Rails.logger.warn "[NetSuite] Item #{id} is not a #{@object} (401 - wrong record type)"
                 return nil
             end
@@ -387,7 +387,7 @@ module Netsuite
 
         def self.update(id, body, replace_item: false)
             client = Client.new
-            params = replace_item ? { replace: 'item' } : {}
+            params = replace_item ? { replace: "item" } : {}
             client.update_record(object: @object, id:, body:, params:)
         end
 
@@ -397,7 +397,7 @@ module Netsuite
         end
 
         def self.assign_external_id(id, external_id)
-            update(id, { 'externalId' => external_id })
+            update(id, { "externalId" => external_id })
         end
 
         def self.id_hash
@@ -409,7 +409,7 @@ module Netsuite
 
             ids.each do |id|
                 record = find(id)
-                hash[record['name']] = record['id']
+                hash[record["name"]] = record["id"]
             end
             hash
         end
@@ -423,7 +423,7 @@ module Netsuite
         def update(id)
             puts @body
             client = Client.new
-            client.update_record(object: @object, id:, body: @body, params: { replace: 'item' })
+            client.update_record(object: @object, id:, body: @body, params: { replace: "item" })
         end
     end
 
@@ -447,9 +447,9 @@ module Netsuite
         end
 
         def add_item_group(id:, quantity:, amount: 0)
-            item_group = ItemGroup.find(id).dig('member', 'items')
+            item_group = ItemGroup.find(id).dig("member", "items")
             item_group&.map do |item|
-                item_id = item['item']['id']
+                item_id = item["item"]["id"]
 
                 add_item(id: item_id, quantity:, amount:)
             end
@@ -459,7 +459,7 @@ module Netsuite
     # Customer Class
 
     class Customer < Record
-        @object = 'customer'
+        @object = "customer"
 
         def self.find_by(email: nil, phone: nil)
             # Instantiate Netsuite Client
@@ -469,21 +469,21 @@ module Netsuite
             # Infer Customer ID from API's. Check by email and phone in primary and secondary email fields.
             # TODO: Add secondary email and phone fields to customer record in ns and query as well!
             if email
-                email_query = client.query(object: 'customer', query: "email CONTAIN \"#{email}\"")
-                has_email_match = email_query['totalResults'].to_i.positive?
-                customer_id = email_query.dig('items', -1, 'id') if has_email_match
+                email_query = client.query(object: "customer", query: "email CONTAIN \"#{email}\"")
+                has_email_match = email_query["totalResults"].to_i.positive?
+                customer_id = email_query.dig("items", -1, "id") if has_email_match
             end
 
             if phone
-                phone_query = client.query(object: 'customer', query: "phone CONTAIN \"#{phone}\"")
-                has_phone_match = phone_query['totalResults'].to_i.positive?
-                customer_id = phone_query.dig('items', -1, 'id') if has_phone_match
+                phone_query = client.query(object: "customer", query: "phone CONTAIN \"#{phone}\"")
+                has_phone_match = phone_query["totalResults"].to_i.positive?
+                customer_id = phone_query.dig("items", -1, "id") if has_phone_match
             end
             customer_id
         end
 
         def initialize(props)
-            @object = 'customer'
+            @object = "customer"
             @first_name = props[:first_name]
             @last_name = props[:last_name]
             @email = props[:email]
@@ -506,7 +506,7 @@ module Netsuite
                 addressbook: {
                     items: [
                         {
-                            label: 'Main Address',
+                            label: "Main Address",
                             addressbookAddress: {
                                 addressee: "#{@first_name} #{@last_name}",
                                 addrPhone: @phone,
@@ -528,10 +528,10 @@ module Netsuite
     # Project Class
 
     class Project < Record
-        @object = 'job'
+        @object = "job"
 
         def initialize(props)
-            @object = 'job'
+            @object = "job"
             @customer_id = props[:customer_id].to_i
             @project_id = props[:project_id].to_i
             @entity_id = props[:entity_id]
@@ -560,10 +560,10 @@ module Netsuite
     end
 
     class Vendor < Record
-        @object = 'vendor'
+        @object = "vendor"
 
         def initialize(props)
-            @object = 'vendor'
+            @object = "vendor"
             @body = props
             super
         end
@@ -571,10 +571,10 @@ module Netsuite
 
     # Estimate Class
     class Estimate < TransactionRecord
-        @object = 'estimate'
+        @object = "estimate"
 
         def initialize(props)
-            @object = 'estimate'
+            @object = "estimate"
             @customer_id = props[:customer_id]
             @project_id = props[:project_id]
             @internal_project_id = props[:internal_project_id]
@@ -608,10 +608,10 @@ module Netsuite
 
     # Sales Order Class
     class SalesOrder < TransactionRecord
-        @object = 'salesOrder'
+        @object = "salesOrder"
 
         def initialize(props)
-            @object = 'salesOrder'
+            @object = "salesOrder"
             @customer_id = props[:customer_id]
             @project_id = props[:project_id]
             @internal_project_id = props[:internal_project_id]
@@ -647,23 +647,23 @@ module Netsuite
         end
 
         def self.close(sales_order)
-            body_item = sales_order['item']
+            body_item = sales_order["item"]
 
             # Adding Status to each item of "Closed"
-            body_item['items'].each do |item|
-                item['isClosed'] = true
+            body_item["items"].each do |item|
+                item["isClosed"] = true
             end
 
             closing_memo = "Closed by the Proposal Tool API due to cancellation on #{Date.today.strftime('%m/%d/%Y')}"
             body = {
                 item: body_item,
-                status: 'H',
+                status: "H",
                 custbody_cancellation_date: Date.today.to_s,
                 memo: closing_memo
             }
 
             # Updating the Sales Order
-            update(sales_order['id'], body)
+            update(sales_order["id"], body)
         end
 
         # Close specific line items on a Sales Order without closing the entire SO
@@ -672,11 +672,11 @@ module Netsuite
         # @return [String] The response body from the update
         def self.close_specific_lines(sales_order_id, line_numbers)
             sales_order = find(sales_order_id)
-            body_item = sales_order['item']
+            body_item = sales_order["item"]
 
             # Close only the specified lines
-            body_item['items'].each do |item|
-                item['isClosed'] = true if line_numbers.include?(item['line'])
+            body_item["items"].each do |item|
+                item["isClosed"] = true if line_numbers.include?(item["line"])
             end
 
             # Note: Do NOT set status: 'H' here as that closes the entire SO
@@ -686,10 +686,10 @@ module Netsuite
     end
 
     class RevenueArrangement < TransactionRecord
-        @object = 'revenueArrangement'
+        @object = "revenueArrangement"
 
         def initialize(props)
-            @object = 'revenueArrangement'
+            @object = "revenueArrangement"
 
             generate_body
             super
@@ -706,10 +706,10 @@ module Netsuite
     end
 
     class ChangeOrder < Record
-        @object = 'customrecord_change_order'
+        @object = "customrecord_change_order"
 
         def initialize(props)
-            @object = 'customrecord_change_order'
+            @object = "customrecord_change_order"
             @date = props[:date]
             @materials_change = props[:materials_change]
             @payment_method_change = props[:payment_method_change]
@@ -741,10 +741,10 @@ module Netsuite
 
     # Service Titan Sync
     class ServiceTitanCustomerSyncRecord < Record
-        @object = 'customrecord_st_tenant_cust'
+        @object = "customrecord_st_tenant_cust"
 
         def initialize(props)
-            @object = 'customrecord_st_tenant_cust'
+            @object = "customrecord_st_tenant_cust"
             @service_titan_customer_id = props[:service_titan_customer_id]
             @service_titan_customer_name = props[:service_titan_customer_name]
             @netsuite_customer_id = props[:netsuite_customer_id]
@@ -776,10 +776,10 @@ module Netsuite
     # Invoice Class
 
     class Invoice < TransactionRecord
-        @object = 'invoice'
+        @object = "invoice"
 
         def initialize(props)
-            @object = 'invoice'
+            @object = "invoice"
             @customer_id = props[:customer_id]
             @location_id = props[:location_id]
             @sales_order_id = props[:sales_order_id]
@@ -814,10 +814,10 @@ module Netsuite
 
     # Customer Deposit Class
     class CustomerDeposit < Record
-        @object = 'customerDeposit'
+        @object = "customerDeposit"
 
         def initialize(props)
-            @object = 'customerDeposit'
+            @object = "customerDeposit"
             @customer_id = props[:customer_id]
             @location_id = props[:location_id]
             @sales_order_id = props[:sales_order_id]
@@ -849,7 +849,7 @@ module Netsuite
 
     # Purchase Order Class
     class PurchaseOrder < TransactionRecord
-        @object = 'purchaseOrder'
+        @object = "purchaseOrder"
 
         # RESTlet script and deploy IDs for PDF generation
         # Update these after deploying the restlet_po_pdf.js script in NetSuite
@@ -857,7 +857,7 @@ module Netsuite
         PDF_RESTLET_DEPLOY_ID = 1
 
         def initialize(props)
-            @object = 'purchaseOrder'
+            @object = "purchaseOrder"
             @vendor = props[:vendor]
             @vendor_name = props[:vendor_name]
             @customer_id = props[:customer_id]
@@ -908,7 +908,7 @@ module Netsuite
         # Returns hash with :success, :content (base64), :fileName, :error
         def self.fetch_pdf(po_id)
             unless PDF_RESTLET_SCRIPT_ID && PDF_RESTLET_DEPLOY_ID
-                raise 'PDF RESTlet not configured. Set PDF_RESTLET_SCRIPT_ID and PDF_RESTLET_DEPLOY_ID'
+                raise "PDF RESTlet not configured. Set PDF_RESTLET_SCRIPT_ID and PDF_RESTLET_DEPLOY_ID"
             end
 
             client = Client.new
@@ -923,9 +923,9 @@ module Netsuite
         # Returns the raw PDF binary data
         def self.fetch_pdf_binary(po_id)
             result = fetch_pdf(po_id)
-            raise result['error'] unless result['success']
+            raise result["error"] unless result["success"]
 
-            Base64.decode64(result['content'])
+            Base64.decode64(result["content"])
         end
 
         # Fetch PDF and save to a file
@@ -941,17 +941,17 @@ module Netsuite
         # @return [String] The response body from the update
         def self.close(po_id, line_numbers = nil)
             purchase_order = find(po_id)
-            body_item = purchase_order['item']
+            body_item = purchase_order["item"]
 
             if line_numbers.nil?
                 # Close all items
-                body_item['items'].each do |item|
-                    item['isClosed'] = true
+                body_item["items"].each do |item|
+                    item["isClosed"] = true
                 end
             else
                 # Close only specific line numbers
-                body_item['items'].each do |item|
-                    item['isClosed'] = true if line_numbers.include?(item['line'])
+                body_item["items"].each do |item|
+                    item["isClosed"] = true if line_numbers.include?(item["line"])
                 end
             end
 
@@ -962,50 +962,50 @@ module Netsuite
 
     # Discount Item Class
     class DiscountItem < Record
-        @object = 'discountItem'
+        @object = "discountItem"
 
         def initialize
-            @object = 'discountItem'
+            @object = "discountItem"
             super
         end
     end
 
     # Inventory Item Class
     class InventoryItem < Record
-        @object = 'inventoryItem'
+        @object = "inventoryItem"
 
         def initialize
-            @object = 'inventoryItem'
+            @object = "inventoryItem"
             super
         end
     end
 
     # Item Group Class
     class ItemGroup < Record
-        @object = 'itemGroup'
+        @object = "itemGroup"
 
         def initialize
-            @object = 'itemGroup'
+            @object = "itemGroup"
             super
         end
     end
 
     # Service Sale Item Class
     class ServiceSaleItem < Record
-        @object = 'serviceSaleItem'
+        @object = "serviceSaleItem"
 
         def initalize
-            @object = 'serviceSaleItem'
+            @object = "serviceSaleItem"
             super
         end
     end
 
     # Service Resale Item Class
     class ServiceResaleItem < Record
-        @object = 'serviceResaleItem'
+        @object = "serviceResaleItem"
 
         def initalize
-            @object = 'serviceResaleItem'
+            @object = "serviceResaleItem"
             super
         end
     end
@@ -1013,35 +1013,35 @@ module Netsuite
     # Other Charge Sale Item Class
 
     class OtherChargeSaleItem < Record
-        @object = 'otherChargeSaleItem'
+        @object = "otherChargeSaleItem"
 
         def initialize
-            @object = 'otherChargeSaleItem'
+            @object = "otherChargeSaleItem"
             super
         end
     end
 
     # Lender
     class Lender < Record
-        @object = 'customlistlender'
+        @object = "customlistlender"
         def initialize
-            @object = 'customlistlender'
+            @object = "customlistlender"
             super
         end
     end
 
     class ServiceProjectType < Record
-        @object = 'customlist_service_project_types'
+        @object = "customlist_service_project_types"
         def initialize
-            @object = 'customlist_service_project_types'
+            @object = "customlist_service_project_types"
             super
         end
     end
 
     class RmaType < Record
-        @object = 'customlist_rma_type'
+        @object = "customlist_rma_type"
         def initialize
-            @object = 'customlist_rma_type'
+            @object = "customlist_rma_type"
             super
         end
     end

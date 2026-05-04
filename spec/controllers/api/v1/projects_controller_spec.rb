@@ -129,7 +129,7 @@ RSpec.describe Api::V1::ProjectsController, type: :controller do
     end
 
     before do
-      allow(ProjectSunriseApi).to receive(:get_projects_bulk).and_return({ 'items' => [project_data] })
+      allow(ProjectSunriseApi).to receive(:get_projects_bulk).and_return({ 'items' => [ project_data ] })
     end
 
     it 'returns success response' do

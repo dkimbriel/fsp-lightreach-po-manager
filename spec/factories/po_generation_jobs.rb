@@ -9,7 +9,7 @@ FactoryBot.define do
 
     trait :single_job do
       job_type { 'single' }
-      project_ids { ['SF-001'] }
+      project_ids { [ 'SF-001' ] }
       total_projects { 1 }
     end
 

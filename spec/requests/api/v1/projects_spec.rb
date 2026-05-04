@@ -90,7 +90,7 @@ RSpec.describe 'API V1 Projects', type: :request do
     end
 
     before do
-      allow(ProjectSunriseApi).to receive(:get_projects_bulk).and_return({ 'items' => [project_data] })
+      allow(ProjectSunriseApi).to receive(:get_projects_bulk).and_return({ 'items' => [ project_data ] })
     end
 
     it 'returns project details' do

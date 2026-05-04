@@ -1,8 +1,8 @@
 class Lightreach::DirectPayMailer < ApplicationMailer
-  default from: 'project_sunrise@gofreedompower.com'
+  default from: "project_sunrise@gofreedompower.com"
 
   FLORIDA_LOCATIONS = %w[Tampa Orlando].freeze
-  TEXAS_LOCATIONS = ['Austin', 'Houston', 'Dallas', 'San Antonio'].freeze
+  TEXAS_LOCATIONS = [ "Austin", "Houston", "Dallas", "San Antonio" ].freeze
 
   def regional_pos_created(region:, created_pos:, po_pdfs:, summary_pdf:, test_mode: false)
     @region = region
@@ -13,19 +13,19 @@ class Lightreach::DirectPayMailer < ApplicationMailer
     # Attach region summary PDF
     filename = "Lightreach_Direct_Pay_#{region.gsub(' ', '_')}_Summary.pdf"
     attachments[filename] = {
-      mime_type: 'application/pdf',
+      mime_type: "application/pdf",
       content: summary_pdf
     }
 
     # Attach individual PO PDFs
     po_pdfs.each do |pdf_data|
       attachments["PO_#{pdf_data[:po_id]}_#{pdf_data[:project_id]}.pdf"] = {
-        mime_type: 'application/pdf',
+        mime_type: "application/pdf",
         content: pdf_data[:pdf_binary]
       }
     end
 
-    recipients = test_mode ? ['dkimbriel@gofreedompower.com'] : build_regional_recipient_list(region)
+    recipients = test_mode ? [ "dkimbriel@gofreedompower.com" ] : build_regional_recipient_list(region)
     subject_line = "Lightreach Direct Pay - #{region} - #{@total_projects} Purchase Orders Created"
     subject_line = "[TEST] #{subject_line}" if test_mode
 
@@ -41,7 +41,7 @@ class Lightreach::DirectPayMailer < ApplicationMailer
     region = po_data[:location_name]
 
     attachments["PO_#{po_data[:po_id]}_#{po_data[:project_id]}.pdf"] = {
-      mime_type: 'application/pdf',
+      mime_type: "application/pdf",
       content: pdf_binary
     }
 
@@ -59,11 +59,11 @@ class Lightreach::DirectPayMailer < ApplicationMailer
 
   def build_regional_recipient_list(region)
     recipients = [
-      'dkimbriel@gofreedompower.com',
-      'colby.clem@greentechrenewables.com',
-      'jcarroll@gofreedompower.com',
-      'dfisk@freedomsolarpower.com',
-      'chad@freedomsolarpower.com'
+      "dkimbriel@gofreedompower.com",
+      "colby.clem@greentechrenewables.com",
+      "jcarroll@gofreedompower.com",
+      "dfisk@freedomsolarpower.com",
+      "chad@freedomsolarpower.com"
     ] + DistributionList.warehouse
 
     # Add regional ROM instead of generic rom@
@@ -71,14 +71,14 @@ class Lightreach::DirectPayMailer < ApplicationMailer
     recipients.concat(regional_roms) if regional_roms.present?
 
     # Add GreenTech regional contact
-    if region == 'Tampa'
-      recipients << 'hunter.david@greentechrenewables.com'
-      recipients << 'troy.walter@greentechrenewables.com'
-    elsif region == 'Orlando'
-      recipients << 'David.Principato@greentechrenewables.com'
+    if region == "Tampa"
+      recipients << "hunter.david@greentechrenewables.com"
+      recipients << "troy.walter@greentechrenewables.com"
+    elsif region == "Orlando"
+      recipients << "David.Principato@greentechrenewables.com"
     elsif TEXAS_LOCATIONS.include?(region)
-      recipients << 'Sydni.landreneau@greentechrenewables.com'
-      recipients << 'alex.juarez@greentechrenewables.com'
+      recipients << "Sydni.landreneau@greentechrenewables.com"
+      recipients << "alex.juarez@greentechrenewables.com"
     end
 
     recipients

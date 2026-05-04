@@ -1,13 +1,13 @@
 class BatchPoGenerationWorker
   include Sidekiq::Worker
 
-  sidekiq_options queue: 'po_generation', retry: 0
+  sidekiq_options queue: "po_generation", retry: 0
 
   def perform(job_id)
     job = PoGenerationJob.find(job_id)
 
     job.update!(
-      status: 'running',
+      status: "running",
       started_at: Time.current,
       locked_at: Time.current,
       locked_by: jid
@@ -25,24 +25,24 @@ class BatchPoGenerationWorker
 
     # Generate POs based on job type
     po_results = case job.job_type
-                 when 'region'
+    when "region"
                    service.generate_pos_for_region(job.region)
-                 when 'single'
+    when "single"
                    # For single project job
                    project_id = job.project_ids&.first
                    if project_id
                      result = service.generate_po_for_project(project_id)
-                     result ? [result] : []
+                     result ? [ result ] : []
                    else
                      service.log_progress("No project ID provided for single job", level: :error)
                      []
                    end
-                 when 'batch'
+    when "batch"
                    service.generate_pos_for_batch(job.project_ids)
-                 else
+    else
                    service.log_progress("Unknown job type: #{job.job_type}", level: :error)
                    []
-                 end
+    end
 
     # Check if job was cancelled during processing
     if job.reload.cancelled?
@@ -52,7 +52,7 @@ class BatchPoGenerationWorker
 
     # Update job with results
     job.update!(
-      status: 'completed',
+      status: "completed",
       successful_pos: po_results.length,
       failed_pos: job.total_projects - po_results.length,
       po_results: po_results,
@@ -63,9 +63,9 @@ class BatchPoGenerationWorker
     ActionCable.server.broadcast(
       "po_generation_#{job.id}",
       {
-        type: 'status_update',
+        type: "status_update",
         job_id: job.id,
-        status: 'completed',
+        status: "completed",
         total_projects: job.total_projects,
         successful_pos: po_results.length,
         failed_pos: job.total_projects - po_results.length,
@@ -97,7 +97,7 @@ class BatchPoGenerationWorker
 
     if job
       job.update!(
-        status: 'failed',
+        status: "failed",
         error_message: e.message,
         completed_at: Time.current
       )
@@ -106,9 +106,9 @@ class BatchPoGenerationWorker
       ActionCable.server.broadcast(
         "po_generation_#{job.id}",
         {
-          type: 'status_update',
+          type: "status_update",
           job_id: job.id,
-          status: 'failed',
+          status: "failed",
           total_projects: job.total_projects,
           successful_pos: job.successful_pos || 0,
           failed_pos: job.failed_pos || 0,

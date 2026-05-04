@@ -2,8 +2,8 @@ module HttpVerb
     class Http
         def initialize(uri, limit: 5, multipart: false)
             @http = Net::HTTP.new(uri.host, uri.port)
-            @http.use_ssl = uri.scheme == 'https'
-            @http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+            @http.use_ssl = uri.scheme == "https"
+            @http.verify_mode = OpenSSL::SSL::VERIFY_PEER
             @http.read_timeout = 500
             @limit = limit
             @prev_res = nil
@@ -42,7 +42,7 @@ module HttpVerb
                 response
             elsif @limit.zero?
                 puts "Response Code: #{response_code}, No retries left."
-                puts 'Response Body:'
+                puts "Response Body:"
                 puts @prev_res&.body if @prev_res.present?
                 puts response.body unless @prev_res.present?
                 @prev_res
@@ -50,7 +50,7 @@ module HttpVerb
                 puts "Response Code: #{response_code}, Retrying..."
                 if response_code == 429
                     puts "Response Headers: #{response.to_hash}"
-                    duration = response['Retry-After'] || 10
+                    duration = response["Retry-After"] || 10
                     puts "Sleeping to avoid rolling limit: #{duration}"
                     sleep duration.to_i
                 end
@@ -66,7 +66,7 @@ module HttpVerb
 
         def initialize(uri, headers = nil)
             @request = Net::HTTP::Get.new(uri)
-            @request['accept'] = '*/*'
+            @request["accept"] = "*/*"
             headers&.map { |k, v| @request[k] = v }
         end
     end
@@ -76,7 +76,7 @@ module HttpVerb
 
         def initialize(uri, headers = nil)
             @request = Net::HTTP::Delete.new(uri)
-            @request['accept'] = 'application/json'
+            @request["accept"] = "application/json"
             headers&.map { |k, v| @request[k] = v }
         end
     end
@@ -86,11 +86,11 @@ module HttpVerb
 
         def initialize(uri, body, headers = nil, content_type:)
             @request = Net::HTTP::Post.new(uri)
-            if content_type != 'text/xml'
-                @request['accept'] = 'application/json'
+            if content_type != "text/xml"
+                @request["accept"] = "application/json"
                 body = body.to_json
             end
-            @request['content-type'] = content_type
+            @request["content-type"] = content_type
             @request.body = body
             headers&.map { |k, v| @request[k] = v }
         end
@@ -101,8 +101,8 @@ module HttpVerb
 
         def initialize(uri, form_data, headers = nil)
             @request = Net::HTTP::Post.new(uri)
-            @request.set_form form_data, 'multipart/form-data'
-            @request['accept'] = 'application/json'
+            @request.set_form form_data, "multipart/form-data"
+            @request["accept"] = "application/json"
             headers&.map { |k, v| @request[k] = v }
         end
     end
@@ -112,8 +112,8 @@ module HttpVerb
 
         def initialize(uri, body, headers = nil)
             @request = Net::HTTP::Post.new(uri)
-            @request['accept'] = 'application/json'
-            @request['content-type'] = 'application/x-www-form-urlencoded'
+            @request["accept"] = "application/json"
+            @request["content-type"] = "application/x-www-form-urlencoded"
             @request.body = URI.encode_www_form(body)
             headers&.map { |k, v| @request[k] = v }
         end
@@ -124,8 +124,8 @@ module HttpVerb
 
         def initialize(uri, body, headers = nil)
             @request = Net::HTTP::Put.new(uri)
-            @request['accept'] = 'application/json'
-            @request['content-type'] = 'application/json'
+            @request["accept"] = "application/json"
+            @request["content-type"] = "application/json"
             @request.body = body.to_json
             headers&.map { |k, v| @request[k] = v }
         end
@@ -136,9 +136,9 @@ module HttpVerb
 
         def initialize(uri, path, headers = nil, content_type: nil)
             @request = Net::HTTP::Put.new(uri)
-            @request['accept'] = 'application/json'
-            @request['content-type'] =
-                content_type || MIME::Types.type_for(path)&.first&.content_type || 'application/octet-stream'
+            @request["accept"] = "application/json"
+            @request["content-type"] =
+                content_type || MIME::Types.type_for(path)&.first&.content_type || "application/octet-stream"
             @request.body = File.read(path)
             headers&.map { |k, v| @request[k] = v }
         end
@@ -150,8 +150,8 @@ module HttpVerb
         def initialize(uri, body, headers = nil)
             uri.query = URI.encode_www_form(body)
             @request = Net::HTTP::Put.new(uri)
-            @request['accept'] = 'application/json'
-            @request['content-type'] = 'application/x-www-form-urlencoded'
+            @request["accept"] = "application/json"
+            @request["content-type"] = "application/x-www-form-urlencoded"
             @request.body = body.to_json
             headers&.map { |k, v| @request[k] = v }
         end
@@ -162,8 +162,8 @@ module HttpVerb
 
         def initialize(uri, body, headers = nil)
             @request = Net::HTTP::Patch.new(uri)
-            @request['accept'] = 'application/json'
-            @request['content-type'] = 'application/json'
+            @request["accept"] = "application/json"
+            @request["content-type"] = "application/json"
             @request.body = body.to_json
             headers&.map { |k, v| @request[k] = v }
         end
@@ -189,7 +189,7 @@ module HttpVerb
         http.send(request)
     end
 
-    def self.post(uri, body, headers: nil, limit: 5, content_type: 'application/json')
+    def self.post(uri, body, headers: nil, limit: 5, content_type: "application/json")
         http = Http.new(uri, limit: limit)
         request = Post.new(uri, body, headers, content_type: content_type)
         http.send(request)
@@ -239,7 +239,7 @@ module HttpVerb
         end
 
         # Join text parts as string, then add binary content separately
-        text_body = body_parts.join('')
+        text_body = body_parts.join("")
 
         # Construct final body: text + binary + closing boundary
         final_body = text_body.b # Convert to binary string
@@ -248,7 +248,7 @@ module HttpVerb
         # Create request
         request = Net::HTTP::Post.new(uri)
         headers&.each { |k, v| request[k] = v }
-        request['Content-Type'] = "multipart/form-data; boundary=#{boundary}"
+        request["Content-Type"] = "multipart/form-data; boundary=#{boundary}"
         request.body = final_body
 
         SimpleRequest.new(request)
@@ -261,14 +261,14 @@ module HttpVerb
                 v.map.with_index do |file, index|
                     result << [
                         "files[#{index}]",
-                        file['file'],
-                        { filename: file['name'], content_type: file['content_type'] }
+                        file["file"],
+                        { filename: file["name"], content_type: file["content_type"] }
                     ]
                 end
             elsif v.respond_to?(:path) && v.respond_to?(:read)
-                result << [k.to_s, v]
+                result << [ k.to_s, v ]
             else
-                result << [k.to_s, v.to_s]
+                result << [ k.to_s, v.to_s ]
             end
         end
         result

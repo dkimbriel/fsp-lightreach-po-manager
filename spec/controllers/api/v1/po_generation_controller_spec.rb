@@ -118,7 +118,7 @@ RSpec.describe Api::V1::PoGenerationController, type: :controller do
 
     context 'when project is already being processed' do
       before do
-        create(:po_generation_job, :running, project_ids: [project_id])
+        create(:po_generation_job, :running, project_ids: [ project_id ])
       end
 
       it 'returns conflict status' do
@@ -197,7 +197,7 @@ RSpec.describe Api::V1::PoGenerationController, type: :controller do
   end
 
   describe 'POST #generate_batch' do
-    let(:project_ids) { ['SF-001', 'SF-002', 'SF-003'] }
+    let(:project_ids) { [ 'SF-001', 'SF-002', 'SF-003' ] }
 
     context 'when no conflicts' do
       it 'creates a new job' do
@@ -225,7 +225,7 @@ RSpec.describe Api::V1::PoGenerationController, type: :controller do
 
     context 'when some projects are locked' do
       before do
-        running_job = create(:po_generation_job, :running, :batch_job, project_ids: ['SF-001'])
+        running_job = create(:po_generation_job, :running, :batch_job, project_ids: [ 'SF-001' ])
       end
 
       it 'does not create a new job' do

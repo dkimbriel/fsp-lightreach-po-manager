@@ -19,7 +19,7 @@ RSpec.describe PoGenerationLog, type: :model do
 
     describe '.ordered' do
       it 'returns logs in chronological order' do
-        expect(described_class.ordered).to eq([log1, log2, log3])
+        expect(described_class.ordered).to eq([ log1, log2, log3 ])
       end
     end
   end

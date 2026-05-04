@@ -11,7 +11,7 @@ RSpec.describe Api::V1::BaseController, type: :controller do
     end
 
     def test_render_error_with_errors
-      render_error('Validation failed', status: :unprocessable_entity, errors: { email: ['is invalid'] })
+      render_error('Validation failed', status: :unprocessable_entity, errors: { email: [ 'is invalid' ] })
     end
 
     def test_not_found
@@ -75,7 +75,7 @@ RSpec.describe Api::V1::BaseController, type: :controller do
       json = JSON.parse(response.body)
       expect(json['success']).to be false
       expect(json['error']).to eq('Validation failed')
-      expect(json['errors']).to eq({ 'email' => ['is invalid'] })
+      expect(json['errors']).to eq({ 'email' => [ 'is invalid' ] })
     end
   end
 

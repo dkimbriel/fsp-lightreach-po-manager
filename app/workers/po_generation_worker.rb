@@ -1,14 +1,14 @@
 class PoGenerationWorker
   include Sidekiq::Worker
 
-  sidekiq_options queue: 'po_generation', retry: 0
+  sidekiq_options queue: "po_generation", retry: 0
 
   def perform(job_id, skip_email = false)
     job = PoGenerationJob.find(job_id)
 
     # Update status to running
     job.update!(
-      status: 'running',
+      status: "running",
       started_at: Time.current,
       locked_at: Time.current,
       locked_by: jid
@@ -33,9 +33,9 @@ class PoGenerationWorker
       end
 
       job.update!(
-        status: 'completed',
+        status: "completed",
         successful_pos: 1,
-        po_results: [po_result],
+        po_results: [ po_result ],
         completed_at: Time.current
       )
 
@@ -43,9 +43,9 @@ class PoGenerationWorker
       ActionCable.server.broadcast(
         "po_generation_#{job.id}",
         {
-          type: 'status_update',
+          type: "status_update",
           job_id: job.id,
-          status: 'completed',
+          status: "completed",
           total_projects: job.total_projects,
           successful_pos: 1,
           failed_pos: 0,
@@ -66,9 +66,9 @@ class PoGenerationWorker
       end
     else
       job.update!(
-        status: 'failed',
+        status: "failed",
         failed_pos: 1,
-        error_message: 'Failed to create PO',
+        error_message: "Failed to create PO",
         completed_at: Time.current
       )
 
@@ -76,9 +76,9 @@ class PoGenerationWorker
       ActionCable.server.broadcast(
         "po_generation_#{job.id}",
         {
-          type: 'status_update',
+          type: "status_update",
           job_id: job.id,
-          status: 'failed',
+          status: "failed",
           total_projects: job.total_projects,
           successful_pos: 0,
           failed_pos: 1,
@@ -89,7 +89,7 @@ class PoGenerationWorker
 
   rescue StandardError => e
     job.update!(
-      status: 'failed',
+      status: "failed",
       error_message: e.message,
       completed_at: Time.current
     )
@@ -98,9 +98,9 @@ class PoGenerationWorker
     ActionCable.server.broadcast(
       "po_generation_#{job.id}",
       {
-        type: 'status_update',
+        type: "status_update",
         job_id: job.id,
-        status: 'failed',
+        status: "failed",
         total_projects: job.total_projects,
         successful_pos: job.successful_pos || 0,
         failed_pos: job.failed_pos || 1,

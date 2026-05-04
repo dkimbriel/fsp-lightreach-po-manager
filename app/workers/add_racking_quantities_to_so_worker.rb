@@ -1,38 +1,38 @@
-require 'pdf-reader'
+require "pdf-reader"
 
 class AddRackingQuantitiesToSoWorker
   include Sidekiq::Worker
 
-  sidekiq_options queue: 'po_generation', retry: 3
+  sidekiq_options queue: "po_generation", retry: 3
 
   # NetSuite item ID for Tesla Mid-Circuit Interrupter Gen2
-  TESLA_MCI_GEN2_ITEM_ID = '939'
+  TESLA_MCI_GEN2_ITEM_ID = "939"
   # NetSuite item ID for Enphase Envoy
-  ENPHASE_ENVOY_ITEM_ID = '941'
+  ENPHASE_ENVOY_ITEM_ID = "941"
   # NetSuite item ID for ENP CT-200-SPLIT (required with Enphase Envoy)
-  ENP_CT_200_SPLIT_ITEM_ID = '949'
+  ENP_CT_200_SPLIT_ITEM_ID = "949"
   # NetSuite item ID for Combiner-WIFI-5
-  COMBINER_WIFI_5_ITEM_ID = '734'
+  COMBINER_WIFI_5_ITEM_ID = "734"
   # NetSuite item ID for PF-DW75 (Pegasus non-standard racking)
-  PF_DW75_ITEM_ID = '948'
+  PF_DW75_ITEM_ID = "948"
   # NetSuite item ID for PIF2-BDT (Pegasus non-standard racking)
-  PIF2_BDT_ITEM_ID = '947'
+  PIF2_BDT_ITEM_ID = "947"
   # PF-SF70 ITEM ID (Pegasus non-standard racking)
-  PF_SF70_ITEM_ID = '956'
+  PF_SF70_ITEM_ID = "956"
   # NetSuite item ID for Tesla 200A CT
-  TESLA_200A_CT_ITEM_ID = '953'
+  TESLA_200A_CT_ITEM_ID = "953"
   # NetSuite item ID for SUNMODO TOPTILE-7-B
-  SUNMODO_TOPTILE_7_B_ITEM_ID = '954'
+  SUNMODO_TOPTILE_7_B_ITEM_ID = "954"
 
   # BOM items to parse and add to SO (standard flow)
   BOM_ITEM_CONFIGS = [
-    { search_string: 'TESLA MID-CIRCUIT INTERRUPTER GEN2', item_id: TESLA_MCI_GEN2_ITEM_ID,
-      item_name: 'Tesla MCI Gen2' },
-    { search_string: 'PF-DW75', item_id: PF_DW75_ITEM_ID, item_name: 'PF-DW75' },
-    { search_string: 'PIF2-BDT', item_id: PIF2_BDT_ITEM_ID, item_name: 'PIF2-BDT' },
-    { search_string: '2033376-', item_id: TESLA_200A_CT_ITEM_ID, item_name: 'Tesla 200A CT' },
-    { search_string: 'K10461-107-BK', item_id: SUNMODO_TOPTILE_7_B_ITEM_ID, item_name: 'SUNMODO TOPTILE-7-B' },
-    { search_string: 'PF-SF70', item_id: PF_SF70_ITEM_ID, item_name: 'PF-SF70' }
+    { search_string: "TESLA MID-CIRCUIT INTERRUPTER GEN2", item_id: TESLA_MCI_GEN2_ITEM_ID,
+      item_name: "Tesla MCI Gen2" },
+    { search_string: "PF-DW75", item_id: PF_DW75_ITEM_ID, item_name: "PF-DW75" },
+    { search_string: "PIF2-BDT", item_id: PIF2_BDT_ITEM_ID, item_name: "PIF2-BDT" },
+    { search_string: "2033376-", item_id: TESLA_200A_CT_ITEM_ID, item_name: "Tesla 200A CT" },
+    { search_string: "K10461-107-BK", item_id: SUNMODO_TOPTILE_7_B_ITEM_ID, item_name: "SUNMODO TOPTILE-7-B" },
+    { search_string: "PF-SF70", item_id: PF_SF70_ITEM_ID, item_name: "PF-SF70" }
   ].freeze
 
   def perform(project_id, job_id: nil, skip_status_check: false)
@@ -41,24 +41,24 @@ class AddRackingQuantitiesToSoWorker
 
     # Get BOM file from Sunrise
     bom_data = fetch_bom_file(project_id)
-    return log_error(project_id, 'No BOM file found') unless bom_data['file']
+    return log_error(project_id, "No BOM file found") unless bom_data["file"]
 
     # Extract Pegasus racking items from BOM
-    racking_items = parse_racking_items_from_bom(bom_data['file'])
-    return log_error(project_id, 'No Pegasus racking items found in BOM') if racking_items.empty?
+    racking_items = parse_racking_items_from_bom(bom_data["file"])
+    return log_error(project_id, "No Pegasus racking items found in BOM") if racking_items.empty?
 
     log_progress("Found #{racking_items.size} Pegasus racking items in BOM")
     racking_items.each { |item| log_progress("  #{item[:part_number]}: #{item[:quantity]} EA") }
 
     # Get NetSuite Sales Order ID from HubSpot Deal
     sales_order_id = fetch_sales_order_id(project_id)
-    return log_error(project_id, 'Could not find NetSuite Sales Order ID') unless sales_order_id
+    return log_error(project_id, "Could not find NetSuite Sales Order ID") unless sales_order_id
 
     log_progress("Found NetSuite Sales Order ID: #{sales_order_id}")
 
     # Fetch Sales Order from NetSuite
     sales_order = Netsuite::SalesOrder.find(sales_order_id)
-    return log_error(project_id, 'Could not fetch Sales Order from NetSuite') unless sales_order
+    return log_error(project_id, "Could not fetch Sales Order from NetSuite") unless sales_order
 
     # NOTE: We check individual line item fulfillment (quantityFulfilled) instead of SO-level status
     # This allows updating unfulfilled items even when other parts of the SO have been fulfilled
@@ -67,18 +67,18 @@ class AddRackingQuantitiesToSoWorker
     update_racking_quantities(project_id, sales_order_id, sales_order, racking_items)
 
     # Parse and add Enphase Envoy items (special case: adds 2 items)
-    envoy_items = parse_items_from_bom(bom_data['file'], search_string: 'ENV-IQ-AM1-240',
-                                                         item_name: 'Enphase Envoy')
+    envoy_items = parse_items_from_bom(bom_data["file"], search_string: "ENV-IQ-AM1-240",
+                                                         item_name: "Enphase Envoy")
     add_envoy_items_to_so(project_id, sales_order_id, envoy_items) if envoy_items.any?
 
     # Handle Combiner-WIFI-5 (special case: adds/removes based on HDK presence)
-    hdk_items = parse_items_from_bom(bom_data['file'], search_string: 'X-IQ-AM1-240-5-HDK',
-                                                       item_name: 'X-IQ-AM1-240-5-HDK')
+    hdk_items = parse_items_from_bom(bom_data["file"], search_string: "X-IQ-AM1-240-5-HDK",
+                                                       item_name: "X-IQ-AM1-240-5-HDK")
     handle_combiner_wifi_on_so(project_id, sales_order_id, hdk_items)
 
     # Parse and add standard BOM items
     BOM_ITEM_CONFIGS.each do |config|
-      parse_and_add_item(bom_data['file'], project_id, sales_order_id, **config)
+      parse_and_add_item(bom_data["file"], project_id, sales_order_id, **config)
     end
 
     log_progress("Successfully updated racking quantities for project #{project_id}", level: :success)
@@ -123,7 +123,7 @@ class AddRackingQuantitiesToSoWorker
   end
 
   def fetch_bom_file(project_id)
-    ProjectSunriseApi.get_file(project_id, 'BOM')
+    ProjectSunriseApi.get_file(project_id, "BOM")
   end
 
   def parse_racking_items_from_bom(bom_file)
@@ -136,7 +136,7 @@ class AddRackingQuantitiesToSoWorker
     # Parse each line looking for Pegasus items
     text.each_line do |line|
       # Look for lines containing "Pegasus" in the description
-      next unless line.include?('Pegasus')
+      next unless line.include?("Pegasus")
 
       # Extract part number and quantity
       # Format: "PSR-B168 Pegasus Rail - Black 168" 16 EA"
@@ -205,10 +205,10 @@ class AddRackingQuantitiesToSoWorker
     sales_order = Netsuite::SalesOrder.find(sales_order_id)
     return log_error(project_id, "Could not fetch Sales Order for #{item_name} update") unless sales_order
 
-    items = sales_order.dig('item', 'items')&.deep_dup || []
+    items = sales_order.dig("item", "items")&.deep_dup || []
 
     existing_item = items.find do |item|
-      item.dig('item', 'id').to_s == item_id
+      item.dig("item", "id").to_s == item_id
     end
 
     if existing_item
@@ -218,7 +218,7 @@ class AddRackingQuantitiesToSoWorker
         return
       end
       log_progress("  #{item_name} already exists on SO line #{existing_item['line']}, updating qty to #{total_quantity}")
-      existing_item['quantity'] = total_quantity
+      existing_item["quantity"] = total_quantity
     else
       new_item = {
         item: { id: item_id },
@@ -251,12 +251,12 @@ class AddRackingQuantitiesToSoWorker
     log_progress("Adding Enphase Envoy (qty: #{total_quantity}) to Sales Order #{sales_order_id}")
 
     sales_order = Netsuite::SalesOrder.find(sales_order_id)
-    return log_error(project_id, 'Could not fetch Sales Order for Envoy update') unless sales_order
+    return log_error(project_id, "Could not fetch Sales Order for Envoy update") unless sales_order
 
-    items = sales_order.dig('item', 'items')&.deep_dup || []
+    items = sales_order.dig("item", "items")&.deep_dup || []
 
     existing_envoy = items.find do |item|
-      item.dig('item', 'id').to_s == ENPHASE_ENVOY_ITEM_ID
+      item.dig("item", "id").to_s == ENPHASE_ENVOY_ITEM_ID
     end
 
     if existing_envoy
@@ -267,7 +267,7 @@ class AddRackingQuantitiesToSoWorker
         return
       end
       log_progress("  Enphase Envoy already exists on SO line #{existing_envoy['line']}, updating qty to #{total_quantity}")
-      existing_envoy['quantity'] = total_quantity
+      existing_envoy["quantity"] = total_quantity
     else
       new_item = {
         item: { id: ENPHASE_ENVOY_ITEM_ID },
@@ -280,7 +280,7 @@ class AddRackingQuantitiesToSoWorker
 
     # Also add ENP CT-200-SPLIT (Item 949) - required with Enphase Envoy
     existing_ct_split = items.find do |item|
-      item.dig('item', 'id').to_s == ENP_CT_200_SPLIT_ITEM_ID
+      item.dig("item", "id").to_s == ENP_CT_200_SPLIT_ITEM_ID
     end
 
     if existing_ct_split
@@ -289,7 +289,7 @@ class AddRackingQuantitiesToSoWorker
              "qty fulfilled: #{existing_ct_split['quantityFulfilled']}), skipping", level: :warning)
       else
         log_progress("  ENP CT-200-SPLIT already exists on SO line #{existing_ct_split['line']}, updating qty to #{total_quantity}")
-        existing_ct_split['quantity'] = total_quantity
+        existing_ct_split["quantity"] = total_quantity
       end
     else
       ct_split_item = {
@@ -317,12 +317,12 @@ class AddRackingQuantitiesToSoWorker
 
   def handle_combiner_wifi_on_so(project_id, sales_order_id, hdk_items)
     sales_order = Netsuite::SalesOrder.find(sales_order_id)
-    return log_error(project_id, 'Could not fetch Sales Order for Combiner-WIFI update') unless sales_order
+    return log_error(project_id, "Could not fetch Sales Order for Combiner-WIFI update") unless sales_order
 
-    items = sales_order.dig('item', 'items')&.deep_dup || []
+    items = sales_order.dig("item", "items")&.deep_dup || []
 
     existing_combiner = items.find do |item|
-      item.dig('item', 'id').to_s == COMBINER_WIFI_5_ITEM_ID
+      item.dig("item", "id").to_s == COMBINER_WIFI_5_ITEM_ID
     end
 
     if hdk_items.any?
@@ -338,7 +338,7 @@ class AddRackingQuantitiesToSoWorker
           return
         end
         log_progress("  Combiner-WIFI-5 already exists on SO line #{existing_combiner['line']}, updating qty to #{total_quantity}")
-        existing_combiner['quantity'] = total_quantity
+        existing_combiner["quantity"] = total_quantity
       else
         new_item = {
           item: { id: COMBINER_WIFI_5_ITEM_ID },
@@ -356,9 +356,9 @@ class AddRackingQuantitiesToSoWorker
       end
       # HDK item not present - remove Combiner-WIFI-5 if it exists
       log_progress("Removing Combiner-WIFI-5 from Sales Order #{sales_order_id} (no X-IQ-AM1-240-5-HDK in BOM)")
-      items.reject! { |item| item.dig('item', 'id').to_s == COMBINER_WIFI_5_ITEM_ID }
+      items.reject! { |item| item.dig("item", "id").to_s == COMBINER_WIFI_5_ITEM_ID }
     else
-      log_progress('No Combiner-WIFI-5 to remove (not present on SO)')
+      log_progress("No Combiner-WIFI-5 to remove (not present on SO)")
       return
     end
 
@@ -381,7 +381,7 @@ class AddRackingQuantitiesToSoWorker
     # Use NetSuite external ID lookup directly (more reliable than HubSpot)
     external_id = "sales_order_#{project_id}"
     sales_order = Netsuite::SalesOrder.find_external(external_id)
-    sales_order['id']&.to_i
+    sales_order["id"]&.to_i
   rescue StandardError => e
     puts "Error fetching sales order ID: #{e.message}"
     nil
@@ -389,10 +389,10 @@ class AddRackingQuantitiesToSoWorker
 
   def update_racking_quantities(project_id, sales_order_id, sales_order, racking_items)
     # Get the items from the sales order
-    so_items = sales_order.dig('item', 'items') || []
+    so_items = sales_order.dig("item", "items") || []
 
     if so_items.empty?
-      log_error(project_id, 'Sales Order has no items')
+      log_error(project_id, "Sales Order has no items")
       return
     end
 
@@ -410,15 +410,15 @@ class AddRackingQuantitiesToSoWorker
       bom_quantity = racking_item[:quantity]
 
       # PSR-B84 maps to PSR-M168-US (DOMESTIC) at half quantity
-      bom_quantity = (bom_quantity / 2.0).ceil if bom_part_number == 'PSR-B84'
+      bom_quantity = (bom_quantity / 2.0).ceil if bom_part_number == "PSR-B84"
 
       # Find matching item in Sales Order
       matching_so_item = find_matching_so_item(so_items, bom_part_number, item_details_cache)
 
       if matching_so_item
-        line_number = matching_so_item['line']
+        line_number = matching_so_item["line"]
         so_part_number = get_part_number_from_item(matching_so_item, item_details_cache)
-        current_quantity = matching_so_item['quantity'].to_i
+        current_quantity = matching_so_item["quantity"].to_i
 
         # Skip if line item has already been fulfilled
         if item_fulfilled?(matching_so_item)
@@ -453,7 +453,7 @@ class AddRackingQuantitiesToSoWorker
     end
 
     if updates_needed.empty?
-      puts 'No quantity updates needed - all quantities already match'
+      puts "No quantity updates needed - all quantities already match"
       return
     end
 
@@ -465,7 +465,7 @@ class AddRackingQuantitiesToSoWorker
     cache = {}
 
     so_items.each do |item|
-      item_id = item.dig('item', 'id')
+      item_id = item.dig("item", "id")
       next unless item_id
       next if cache.key?(item_id) # Skip if already cached (even if value is nil)
 
@@ -491,7 +491,7 @@ class AddRackingQuantitiesToSoWorker
     match = so_items.find do |item|
       so_part = get_part_number_from_item(item, item_details_cache)
       # Check if SO part is domestic version (ends with -US (DOMESTIC))
-      normalized_so_part = so_part.gsub(/ \(DOMESTIC\)$/i, '')
+      normalized_so_part = so_part.gsub(/ \(DOMESTIC\)$/i, "")
       normalized_so_part == bom_part_number
     end
 
@@ -504,28 +504,28 @@ class AddRackingQuantitiesToSoWorker
     so_items.find do |item|
       so_part = get_part_number_from_item(item, item_details_cache)
       case bom_part_number
-      when 'PSR-B168'
-        so_part == 'PSR-M168-US (DOMESTIC)'
-      when 'PSR-B84'
-        so_part == 'PSR-M168-US (DOMESTIC)'
-      when 'PSR-MCB'
-        so_part == 'PSR-MCZ-US (DOMESTIC)'
-      when 'PSR-MCZ-US'
-        so_part == 'PSR-MCZ-US (DOMESTIC)'
-      when 'PSR-HEC'
-        so_part == 'PSR-MCZ-US (DOMESTIC)'
-      when 'PSR-B168-US'
-        so_part == 'PSR-M168-US (DOMESTIC)'
-      when 'PSR-SPL'
-        so_part == 'PSR-SPLS-US (DOMESTIC)'
-      when 'PSR-SPLS-US'
-        so_part == 'PSR-SPLS-US (DOMESTIC)'
-      when 'PSR-MLP-US'
-        so_part == 'PSR-MLP-US (DOMESTIC)'
-      when 'PSR-SRC'
-        so_part == 'PSR-SRC-US (DOMESTIC)'
-      when 'PSR-SRC-US'
-        so_part == 'PSR-SRC-US (DOMESTIC)'
+      when "PSR-B168"
+        so_part == "PSR-M168-US (DOMESTIC)"
+      when "PSR-B84"
+        so_part == "PSR-M168-US (DOMESTIC)"
+      when "PSR-MCB"
+        so_part == "PSR-MCZ-US (DOMESTIC)"
+      when "PSR-MCZ-US"
+        so_part == "PSR-MCZ-US (DOMESTIC)"
+      when "PSR-HEC"
+        so_part == "PSR-MCZ-US (DOMESTIC)"
+      when "PSR-B168-US"
+        so_part == "PSR-M168-US (DOMESTIC)"
+      when "PSR-SPL"
+        so_part == "PSR-SPLS-US (DOMESTIC)"
+      when "PSR-SPLS-US"
+        so_part == "PSR-SPLS-US (DOMESTIC)"
+      when "PSR-MLP-US"
+        so_part == "PSR-MLP-US (DOMESTIC)"
+      when "PSR-SRC"
+        so_part == "PSR-SRC-US (DOMESTIC)"
+      when "PSR-SRC-US"
+        so_part == "PSR-SRC-US (DOMESTIC)"
       else
         false
       end
@@ -534,17 +534,17 @@ class AddRackingQuantitiesToSoWorker
 
   def get_part_number_from_item(so_item, item_details_cache)
     # Try to get the item details to find part number
-    item_id = so_item.dig('item', 'id')
+    item_id = so_item.dig("item", "id")
 
     if item_id && item_details_cache[item_id]
       # Use cached inventory item
       inventory_item = item_details_cache[item_id]
-      part_number = inventory_item['itemId'] || inventory_item['name']
+      part_number = inventory_item["itemId"] || inventory_item["name"]
       return part_number if part_number
     end
 
     # Fallback to item name from SO
-    so_item.dig('item', 'refName') || so_item['itemName'] || ''
+    so_item.dig("item", "refName") || so_item["itemName"] || ""
   end
 
   def apply_quantity_updates(sales_order_id, sales_order, updates)
@@ -555,11 +555,11 @@ class AddRackingQuantitiesToSoWorker
     end
 
     # Build the update body with modified item quantities
-    items = sales_order.dig('item', 'items').deep_dup
+    items = sales_order.dig("item", "items").deep_dup
 
     updates.each do |update|
-      item = items.find { |i| i['line'] == update[:line] }
-      item['quantity'] = update[:new_quantity] if item
+      item = items.find { |i| i["line"] == update[:line] }
+      item["quantity"] = update[:new_quantity] if item
     end
 
     body = {
@@ -575,7 +575,7 @@ class AddRackingQuantitiesToSoWorker
   end
 
   def item_fulfilled?(item)
-    (item['quantityFulfilled'] || 0).to_i.positive?
+    (item["quantityFulfilled"] || 0).to_i.positive?
   end
 
   def extract_class_and_location(items)
@@ -584,8 +584,8 @@ class AddRackingQuantitiesToSoWorker
     return {} unless first_item
 
     result = {}
-    result['class'] = first_item['class'] if first_item['class']
-    result['location'] = first_item['location'] if first_item['location']
+    result["class"] = first_item["class"] if first_item["class"]
+    result["location"] = first_item["location"] if first_item["location"]
     result
   end
 

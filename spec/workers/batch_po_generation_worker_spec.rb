@@ -64,7 +64,7 @@ RSpec.describe BatchPoGenerationWorker, type: :worker do
   describe 'single project job' do
     let(:project_id) { 'SF-12345' }
     let(:job) do
-      create(:po_generation_job, :single_job, project_ids: [project_id], user: user)
+      create(:po_generation_job, :single_job, project_ids: [ project_id ], user: user)
     end
     let(:po_result) { { 'po_id' => 12345, 'project_id' => project_id } }
 
@@ -122,7 +122,7 @@ RSpec.describe BatchPoGenerationWorker, type: :worker do
   end
 
   describe 'batch job' do
-    let(:project_ids) { ['SF-001', 'SF-002', 'SF-003'] }
+    let(:project_ids) { [ 'SF-001', 'SF-002', 'SF-003' ] }
     let(:job) do
       create(:po_generation_job, :batch_job, project_ids: project_ids, user: user)
     end
@@ -189,7 +189,7 @@ RSpec.describe BatchPoGenerationWorker, type: :worker do
     let(:email_service) { instance_double(EmailNotificationService) }
 
     context 'when POs are generated' do
-      let(:po_results) { [{ 'po_id' => 12345 }] }
+      let(:po_results) { [ { 'po_id' => 12345 } ] }
 
       before do
         allow(service).to receive(:generate_pos_for_region).and_return(po_results)

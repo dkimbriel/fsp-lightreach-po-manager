@@ -1,5 +1,5 @@
 class User < ApplicationRecord
-  devise :omniauthable, omniauth_providers: [:google_oauth2]
+  devise :omniauthable, omniauth_providers: [ :google_oauth2 ]
 
   has_many :po_generation_jobs, dependent: :destroy
 

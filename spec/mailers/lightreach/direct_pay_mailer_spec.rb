@@ -41,8 +41,8 @@ RSpec.describe Lightreach::DirectPayMailer, type: :mailer do
 
     before do
       # Mock DistributionList
-      allow(DistributionList).to receive(:warehouse).and_return(['warehouse@example.com'])
-      allow(DistributionList).to receive(:regional_rom).and_return(['rom@example.com'])
+      allow(DistributionList).to receive(:warehouse).and_return([ 'warehouse@example.com' ])
+      allow(DistributionList).to receive(:regional_rom).and_return([ 'rom@example.com' ])
     end
 
     context 'in production mode' do
@@ -76,7 +76,7 @@ RSpec.describe Lightreach::DirectPayMailer, type: :mailer do
       end
 
       it 'sends from correct address' do
-        expect(mail.from).to eq(['project_sunrise@gofreedompower.com'])
+        expect(mail.from).to eq([ 'project_sunrise@gofreedompower.com' ])
       end
 
       it 'attaches regional summary PDF' do
@@ -120,7 +120,7 @@ RSpec.describe Lightreach::DirectPayMailer, type: :mailer do
       end
 
       it 'sends only to test email' do
-        expect(mail.to).to eq(['dkimbriel@gofreedompower.com'])
+        expect(mail.to).to eq([ 'dkimbriel@gofreedompower.com' ])
       end
 
       it 'includes [TEST] in subject' do
@@ -142,7 +142,7 @@ RSpec.describe Lightreach::DirectPayMailer, type: :mailer do
           }
         ]
       end
-      let(:po_pdfs) { [{ po_id: 12345, project_id: 'SF-001', pdf_binary: mock_pdf_binary }] }
+      let(:po_pdfs) { [ { po_id: 12345, project_id: 'SF-001', pdf_binary: mock_pdf_binary } ] }
 
       let(:mail) do
         described_class.regional_pos_created(
@@ -174,7 +174,7 @@ RSpec.describe Lightreach::DirectPayMailer, type: :mailer do
           }
         ]
       end
-      let(:po_pdfs) { [{ po_id: 12345, project_id: 'SF-001', pdf_binary: mock_pdf_binary }] }
+      let(:po_pdfs) { [ { po_id: 12345, project_id: 'SF-001', pdf_binary: mock_pdf_binary } ] }
 
       let(:mail) do
         described_class.regional_pos_created(
@@ -193,7 +193,7 @@ RSpec.describe Lightreach::DirectPayMailer, type: :mailer do
 
     context 'when regional_rom returns nil' do
       before do
-        allow(DistributionList).to receive(:warehouse).and_return(['warehouse@example.com'])
+        allow(DistributionList).to receive(:warehouse).and_return([ 'warehouse@example.com' ])
         allow(DistributionList).to receive(:regional_rom).and_return(nil)
       end
 
@@ -230,7 +230,7 @@ RSpec.describe Lightreach::DirectPayMailer, type: :mailer do
           }
         ]
       end
-      let(:po_pdfs) { [{ po_id: 12345, project_id: 'SF-001', pdf_binary: mock_pdf_binary }] }
+      let(:po_pdfs) { [ { po_id: 12345, project_id: 'SF-001', pdf_binary: mock_pdf_binary } ] }
 
       let(:mail) do
         described_class.regional_pos_created(
@@ -263,8 +263,8 @@ RSpec.describe Lightreach::DirectPayMailer, type: :mailer do
     end
 
     before do
-      allow(DistributionList).to receive(:warehouse).and_return(['warehouse@example.com'])
-      allow(DistributionList).to receive(:regional_rom).and_return(['rom@example.com'])
+      allow(DistributionList).to receive(:warehouse).and_return([ 'warehouse@example.com' ])
+      allow(DistributionList).to receive(:regional_rom).and_return([ 'rom@example.com' ])
     end
 
     context 'without CC' do
@@ -307,7 +307,7 @@ RSpec.describe Lightreach::DirectPayMailer, type: :mailer do
       end
 
       it 'includes CC email' do
-        expect(mail.cc).to eq(['cc@example.com'])
+        expect(mail.cc).to eq([ 'cc@example.com' ])
       end
     end
   end

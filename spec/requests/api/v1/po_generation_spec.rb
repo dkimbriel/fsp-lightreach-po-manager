@@ -87,7 +87,7 @@ RSpec.describe 'API V1 PO Generation', type: :request do
 
       job = PoGenerationJob.last
       expect(job.job_type).to eq('single')
-      expect(job.project_ids).to eq([project_id])
+      expect(job.project_ids).to eq([ project_id ])
     end
 
     it 'returns success with job ID' do
@@ -115,7 +115,7 @@ RSpec.describe 'API V1 PO Generation', type: :request do
 
     context 'when project is locked' do
       before do
-        create(:po_generation_job, :running, :single_job, project_ids: [project_id])
+        create(:po_generation_job, :running, :single_job, project_ids: [ project_id ])
       end
 
       it 'returns conflict error' do
@@ -129,7 +129,7 @@ RSpec.describe 'API V1 PO Generation', type: :request do
   end
 
   describe 'POST /api/v1/po_generation/batch' do
-    let(:project_ids) { ['SF-001', 'SF-002', 'SF-003'] }
+    let(:project_ids) { [ 'SF-001', 'SF-002', 'SF-003' ] }
 
     before do
       allow(BatchPoGenerationWorker).to receive(:perform_async)
@@ -157,7 +157,7 @@ RSpec.describe 'API V1 PO Generation', type: :request do
 
     context 'when some projects are locked' do
       before do
-        create(:po_generation_job, :running, :batch_job, project_ids: ['SF-001'])
+        create(:po_generation_job, :running, :batch_job, project_ids: [ 'SF-001' ])
       end
 
       it 'returns conflict with locked project IDs' do

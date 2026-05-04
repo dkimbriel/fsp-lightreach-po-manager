@@ -44,7 +44,7 @@ class PoGenerationChannel < ApplicationCable::Channel
 
     # Send job status update
     transmit({
-      type: 'status_update',
+      type: "status_update",
       job_id: job.id,
       status: job.status,
       total_projects: job.total_projects,

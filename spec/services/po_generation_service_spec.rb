@@ -258,14 +258,14 @@ RSpec.describe PoGenerationService, type: :service do
     end
 
     before do
-      allow(ProjectSunriseApi).to receive(:get_projects_bulk).and_return({ 'items' => [project_data] })
+      allow(ProjectSunriseApi).to receive(:get_projects_bulk).and_return({ 'items' => [ project_data ] })
       allow(service).to receive(:fetch_job_starts_for_projects).and_return({ project_id => '2025-03-15T10:00:00Z' })
       allow(service).to receive(:create_po).and_return(po_result)
       allow(service).to receive(:update_project_po_link)
     end
 
     it 'fetches project data from Sunrise API' do
-      expect(ProjectSunriseApi).to receive(:get_projects_bulk).with([project_id], fields: anything)
+      expect(ProjectSunriseApi).to receive(:get_projects_bulk).with([ project_id ], fields: anything)
       service.generate_po_for_project(project_id)
     end
 
@@ -304,7 +304,7 @@ RSpec.describe PoGenerationService, type: :service do
   end
 
   describe '#generate_pos_for_batch' do
-    let(:project_ids) { ['SF-001', 'SF-002', 'SF-003'] }
+    let(:project_ids) { [ 'SF-001', 'SF-002', 'SF-003' ] }
     let(:projects_data) do
       [
         {
@@ -466,7 +466,7 @@ RSpec.describe PoGenerationService, type: :service do
     it 'sorts items by category' do
       result = service.send(:aggregate_items_across_projects, pos_data)
       categories = result.map { |item| item[:category] }
-      expect(categories).to eq([2, 3, 21])
+      expect(categories).to eq([ 2, 3, 21 ])
     end
 
     it 'includes category name' do
@@ -481,7 +481,7 @@ RSpec.describe PoGenerationService, type: :service do
     end
 
     it 'handles POs with no items' do
-      empty_pos = [{ project_id: 'SF-001', po_items: [] }]
+      empty_pos = [ { project_id: 'SF-001', po_items: [] } ]
       result = service.send(:aggregate_items_across_projects, empty_pos)
       expect(result).to eq([])
     end

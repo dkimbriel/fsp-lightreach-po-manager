@@ -15,7 +15,7 @@ class DistributionList
     end
 
     def self.rpcs
-        ['rpc@gofreedompower.com']
+        [ "rpc@gofreedompower.com" ]
     end
 
     def self.schedulers
@@ -83,61 +83,61 @@ class DistributionList
     end
 
     def self.accounting_missing_payments
-        ['ar@gofreedompower.com']
+        [ "ar@gofreedompower.com" ]
     end
 
     def self.executives
         [
-            'rhunter@gofreedompower.com'
+            "rhunter@gofreedompower.com"
         ]
     end
 
     def self.service_managers
         [
-            'chance@gofreedompower.com',
-            'jordanblair@gofreedompower.com',
-            'zachsettles@gofreedompower.com'
+            "chance@gofreedompower.com",
+            "jordanblair@gofreedompower.com",
+            "zachsettles@gofreedompower.com"
         ]
     end
 
     def self.designers
-        ['designers@gofreedompower.com']
+        [ "designers@gofreedompower.com" ]
     end
 
     def self.lease_team
         [
-            'aaron@gofreedompower.com',
-            'chrismcdonald@gofreedompower.com',
-            'dkimbriel@gofreedompower.com',
-            'mcondict@gofreedompower.com',
-            'chad@gofreedompower.com',
-            'acoward@gofreedompower.com',
-            'rom@gofreedompower.com',
-            'vincentmann@gofreedompower.com'
+            "aaron@gofreedompower.com",
+            "chrismcdonald@gofreedompower.com",
+            "dkimbriel@gofreedompower.com",
+            "mcondict@gofreedompower.com",
+            "chad@gofreedompower.com",
+            "acoward@gofreedompower.com",
+            "rom@gofreedompower.com",
+            "vincentmann@gofreedompower.com"
         ]
     end
 
     def self.qct
-        ['quality@gofreedompower.com']
+        [ "quality@gofreedompower.com" ]
     end
 
     def self.monitoring
-        ['monitoring@gofreedompower.com']
+        [ "monitoring@gofreedompower.com" ]
     end
 
     def self.warehouse
-        ['WHmanagers@gofreedompower.com ']
+        [ "WHmanagers@gofreedompower.com " ]
     end
 
     def self.regional_rom(region)
-        region = 'DFW' if region == 'Dallas'
+        region = "DFW" if region == "Dallas"
         rom_dict = {
-            'Austin' => ['jgarbo@gofreedompower.com', 'cmorenomunoz@gofreedompower.com'],
-            'DFW' => ['visan@gofreedompower.com', 'jclark@gofreedompower.com'],
-            'Houston' => ['marcusspicer@freedomsolarpower.com', 'kjohnson@gofreedompower.com'],
-            'San Antonio' => ['justinrose@gofreedompower.com', 'jreyes@gofreedompower.com'],
-            'Orlando' => ['carloslopez@gofreedompower.com'],
-            'Tampa' => ['abronson@gofreedompower.com', 'rachellethomas@gofreedompower.com ']
+            "Austin" => [ "jgarbo@gofreedompower.com", "cmorenomunoz@gofreedompower.com" ],
+            "DFW" => [ "visan@gofreedompower.com", "jclark@gofreedompower.com" ],
+            "Houston" => [ "marcusspicer@freedomsolarpower.com", "kjohnson@gofreedompower.com" ],
+            "San Antonio" => [ "justinrose@gofreedompower.com", "jreyes@gofreedompower.com" ],
+            "Orlando" => [ "carloslopez@gofreedompower.com" ],
+            "Tampa" => [ "abronson@gofreedompower.com", "rachellethomas@gofreedompower.com " ]
         }
         rom_dict[region]
     end

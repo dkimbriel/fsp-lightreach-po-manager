@@ -36,10 +36,10 @@ class PoGenerationService
   def generate_po_for_project(project_id, skip_email: false, skip_crew_check: false)
     log_progress("Fetching project data for #{project_id}")
 
-    fields = ['name', 'phone', 'email', 'fields.lightreach_direct_pay_po_link', 'fields.loan_application_id',
-              'fields.system_size', 'fields.lender']
-    result = ProjectSunriseApi.get_projects_bulk([project_id], fields: fields)
-    project = result['items']&.first
+    fields = [ "name", "phone", "email", "fields.lightreach_direct_pay_po_link", "fields.loan_application_id",
+              "fields.system_size", "fields.lender" ]
+    result = ProjectSunriseApi.get_projects_bulk([ project_id ], fields: fields)
+    project = result["items"]&.first
 
     unless project
       log_progress("Could not find project #{project_id}", level: :error)
@@ -48,8 +48,8 @@ class PoGenerationService
 
     # Fetch job start dates
     log_progress("Fetching job start dates for #{project_id}")
-    job_starts = fetch_job_starts_for_projects([project_id])
-    project['job_start'] = job_starts[project_id]
+    job_starts = fetch_job_starts_for_projects([ project_id ])
+    project["job_start"] = job_starts[project_id]
 
     # Create or use existing PO
     po_result = create_po(project, skip_crew_check: skip_crew_check)
@@ -83,7 +83,7 @@ class PoGenerationService
     region_projects = []
 
     direct_pay_projects.each do |project|
-      project_id = project['_id']
+      project_id = project["_id"]
       so_data = fetch_sales_order_data(project_id)
       location_name = location_name_for(so_data&.dig(:location_id))
 
@@ -106,7 +106,7 @@ class PoGenerationService
         break
       end
 
-      project_id = project['_id']
+      project_id = project["_id"]
       log_progress("Processing project #{index + 1}/#{region_projects.length}: #{project_id}")
 
       result = create_po(project)
@@ -124,10 +124,10 @@ class PoGenerationService
   def generate_pos_for_batch(project_ids)
     log_progress("Starting batch PO generation for #{project_ids.length} projects")
 
-    fields = ['name', 'phone', 'email', 'fields.lightreach_direct_pay_po_link', 'fields.loan_application_id',
-              'fields.system_size', 'fields.lender']
+    fields = [ "name", "phone", "email", "fields.lightreach_direct_pay_po_link", "fields.loan_application_id",
+              "fields.system_size", "fields.lender" ]
     result = ProjectSunriseApi.get_projects_bulk(project_ids, fields: fields)
-    projects = result['items'] || []
+    projects = result["items"] || []
 
     if projects.empty?
       log_progress("No projects found for provided IDs", level: :error)
@@ -145,8 +145,8 @@ class PoGenerationService
         break
       end
 
-      project_id = project['_id']
-      project['job_start'] = job_starts[project_id]
+      project_id = project["_id"]
+      project["job_start"] = job_starts[project_id]
 
       log_progress("Processing project #{index + 1}/#{projects.length}: #{project_id}")
       po_result = create_po(project)
@@ -164,17 +164,17 @@ class PoGenerationService
 
   # Core PO creation logic
   def create_po(project, skip_crew_check: false)
-    project_id = project['_id']
-    project_name = project['name']
-    customer_phone = project['phone']
-    customer_email = project['email']
-    lightreach_account_id = project.dig('fields', 'loan_application_id')
-    job_start = project['job_start']
-    existing_po_link = project.dig('fields', 'lightreach_direct_pay_po_link')
+    project_id = project["_id"]
+    project_name = project["name"]
+    customer_phone = project["phone"]
+    customer_email = project["email"]
+    lightreach_account_id = project.dig("fields", "loan_application_id")
+    job_start = project["job_start"]
+    existing_po_link = project.dig("fields", "lightreach_direct_pay_po_link")
     is_direct_pay = direct_pay?(project)
 
     # Skip if Crew Installation Complete is already done
-    system_size = project.dig('fields', 'system_size')
+    system_size = project.dig("fields", "system_size")
     skip_due_to_system_size = system_size.present? && system_size.to_f.zero?
 
     if !skip_crew_check && !skip_due_to_system_size && crew_installation_complete?(project_id)
@@ -214,11 +214,11 @@ class PoGenerationService
     # Determine vendor based on direct pay status
     if is_direct_pay
       vendor_id = CED_DIRECT_PAY_VENDOR_ID
-      vendor_name = 'CED - Direct Pay'
+      vendor_name = "CED - Direct Pay"
       po_name = "#{project_id} - Lightreach CED Direct Pay"
     else
       vendor_id = CED_VENDOR_ID
-      vendor_name = 'CED'
+      vendor_name = "CED"
       po_name = "#{project_id} - CED Kitted Job"
     end
 
@@ -284,14 +284,14 @@ class PoGenerationService
 
     log_progress("Using existing PO #{po_id} for #{project_id}", level: :success)
 
-    location_id = purchase_order.dig('location', 'id')
+    location_id = purchase_order.dig("location", "id")
     po_items = extract_items_from_po(purchase_order)
 
     {
       project_id: project_id,
       project_name: project_name,
       po_id: po_id,
-      po_name: purchase_order['tranId'] || "#{project_id} - Lightreach CED Direct Pay",
+      po_name: purchase_order["tranId"] || "#{project_id} - Lightreach CED Direct Pay",
       po_items: po_items,
       lightreach_account_id: lightreach_account_id,
       job_start: job_start,
@@ -310,8 +310,8 @@ class PoGenerationService
     start_time = Time.now.end_of_week
     end_time = Time.now.end_of_week + 7.days
 
-    installation_jobs = SkeduloApi.find_jobs('Installation', start_time: start_time, end_time: end_time)
-    powerwall_jobs = SkeduloApi.find_jobs('Tesla Powerwall', start_time: start_time, end_time: end_time)
+    installation_jobs = SkeduloApi.find_jobs("Installation", start_time: start_time, end_time: end_time)
+    powerwall_jobs = SkeduloApi.find_jobs("Tesla Powerwall", start_time: start_time, end_time: end_time)
 
     installation_jobs + powerwall_jobs
   end
@@ -320,10 +320,10 @@ class PoGenerationService
     job_starts = {}
 
     project_ids.each do |project_id|
-      installation_jobs = SkeduloApi.list_jobs_for_project(project_id, 'Installation')
-      powerwall_jobs = SkeduloApi.list_jobs_for_project(project_id, 'Tesla Powerwall')
+      installation_jobs = SkeduloApi.list_jobs_for_project(project_id, "Installation")
+      powerwall_jobs = SkeduloApi.list_jobs_for_project(project_id, "Tesla Powerwall")
 
-      all_starts = (installation_jobs + powerwall_jobs).map { |job| job['Start'] }.compact
+      all_starts = (installation_jobs + powerwall_jobs).map { |job| job["Start"] }.compact
       job_starts[project_id] = all_starts.min
     end
 
@@ -334,60 +334,60 @@ class PoGenerationService
     # Build mapping of project_id to job start date
     job_start_by_project = {}
     jobs.each do |job|
-      project_id = job.dig('node', 'ProjectSunriseID')
+      project_id = job.dig("node", "ProjectSunriseID")
       next unless project_id
 
-      start_date = job.dig('node', 'Start')
+      start_date = job.dig("node", "Start")
       if start_date && (!job_start_by_project[project_id] || start_date < job_start_by_project[project_id])
         job_start_by_project[project_id] = start_date
       end
     end
 
-    project_ids = jobs.map { |job| job['node']['ProjectSunriseID'] }.uniq
+    project_ids = jobs.map { |job| job["node"]["ProjectSunriseID"] }.uniq
     fields = [
-      'fields.lender',
-      'fields.lightreach_direct_pay',
-      'fields.lightreach_direct_pay_po_link',
-      'name',
-      'phone',
-      'email',
-      'fields.loan_application_id',
-      'fields.market_region',
-      'fields.system_size'
+      "fields.lender",
+      "fields.lightreach_direct_pay",
+      "fields.lightreach_direct_pay_po_link",
+      "name",
+      "phone",
+      "email",
+      "fields.loan_application_id",
+      "fields.market_region",
+      "fields.system_size"
     ]
     result = ProjectSunriseApi.get_projects_bulk(project_ids, fields: fields)
-    projects = result['items'] || []
+    projects = result["items"] || []
     filtered = projects.select { |project| direct_pay?(project) }
 
     # Exclude projects where Crew Installation Complete is done
-    filtered_ids = filtered.map { |p| p['_id'] }
+    filtered_ids = filtered.map { |p| p["_id"] }
     crew_complete_ids = SunriseTask.where(
-      name: 'Crew Installation Complete',
+      name: "Crew Installation Complete",
       is_complete: true,
       project_id: filtered_ids
     ).pluck(:project_id)
 
     filtered = filtered.reject do |p|
-      system_size = p.dig('fields', 'system_size')
+      system_size = p.dig("fields", "system_size")
       next false if system_size.present? && system_size.to_f.zero?
-      crew_complete_ids.include?(p['_id'])
+      crew_complete_ids.include?(p["_id"])
     end
 
     # Add job start date to each project
     filtered.each do |project|
-      project['job_start'] = job_start_by_project[project['_id']]
+      project["job_start"] = job_start_by_project[project["_id"]]
     end
 
     filtered
   end
 
   def direct_pay?(project)
-    project.dig('fields', 'lender') == 'Lightreach Lease'
+    project.dig("fields", "lender") == "Lightreach Lease"
   end
 
   def crew_installation_complete?(project_id)
     SunriseTask.exists?(
-      name: 'Crew Installation Complete',
+      name: "Crew Installation Complete",
       is_complete: true,
       project_id: project_id
     )
@@ -400,28 +400,28 @@ class PoGenerationService
   end
 
   def po_already_received?(purchase_order)
-    status = purchase_order.dig('status', 'id')
+    status = purchase_order.dig("status", "id")
     received_statuses = %w[partiallyReceived pendingBilling fullyBilled closed]
     received_statuses.include?(status)
   end
 
   def extract_items_from_po(purchase_order)
     po_items = []
-    items = purchase_order.dig('item', 'items') || []
+    items = purchase_order.dig("item", "items") || []
 
     items.each do |item|
-      item_id = item.dig('item', 'id')
+      item_id = item.dig("item", "id")
       next unless item_id
 
       # Use raise_on_not_found: false to skip retries and return nil for non-inventory items
       inventory_item = Netsuite::InventoryItem.find(item_id, raise_on_not_found: false)
       next unless inventory_item.is_a?(Hash)
 
-      category = inventory_item.dig('custitem1', 'id')&.to_i
-      quantity = item['quantity'].to_i
+      category = inventory_item.dig("custitem1", "id")&.to_i
+      quantity = item["quantity"].to_i
       next if quantity.zero?
 
-      part_number = inventory_item['itemId'] || inventory_item['name']
+      part_number = inventory_item["itemId"] || inventory_item["name"]
       po_items << {
         item_id: item_id,
         part_number: part_number,
@@ -429,7 +429,7 @@ class PoGenerationService
         quantity: quantity,
         category: category,
         category_name: category_name_for(category),
-        so_line_number: item['line']
+        so_line_number: item["line"]
       }
     end
 
@@ -445,25 +445,25 @@ class PoGenerationService
 
     {
       sales_order_id: sales_order_id,
-      customer_id: sales_order.dig('entity', 'id'),
-      internal_project_id: sales_order.dig('job', 'id'),
-      location_id: sales_order.dig('location', 'id'),
-      ship_to_address: sales_order['shipAddress'],
-      so_items: sales_order.dig('item', 'items') || []
+      customer_id: sales_order.dig("entity", "id"),
+      internal_project_id: sales_order.dig("job", "id"),
+      location_id: sales_order.dig("location", "id"),
+      ship_to_address: sales_order["shipAddress"],
+      so_items: sales_order.dig("item", "items") || []
     }
   end
 
   def fetch_sales_order_id(project_id)
     external_id = "sales_order_#{project_id}"
     sales_order = Netsuite::SalesOrder.find_external(external_id)
-    sales_order['id']&.to_i
+    sales_order["id"]&.to_i
   rescue StandardError => e
     log_progress("Error fetching sales order ID for #{project_id}: #{e.message}", level: :error)
     nil
   end
 
   def submit_po_to_netsuite(project_id, _project_name, po_name, po_items, so_data,
-                            vendor_id: CED_DIRECT_PAY_VENDOR_ID, vendor_name: 'CED - Direct Pay',
+                            vendor_id: CED_DIRECT_PAY_VENDOR_ID, vendor_name: "CED - Direct Pay",
                             is_direct_pay: true)
     po = Netsuite::PurchaseOrder.new(
       vendor: vendor_id,
@@ -502,32 +502,32 @@ class PoGenerationService
 
   def update_project_po_link(project_id, po_link)
     updates = {
-      'lightreach_direct_pay_po_link' => po_link,
-      'lightreach_direct_pay_po_creation_date' => Time.now.to_i * 1000
+      "lightreach_direct_pay_po_link" => po_link,
+      "lightreach_direct_pay_po_creation_date" => Time.now.to_i * 1000
     }
     ProjectSunriseApi.update_project(project_id, updates)
     log_progress("Updated project #{project_id} with PO link")
   end
 
   def filter_po_eligible_items(so_items)
-    eligible_categories = [2, 3, 5, 18, 21, 33]
+    eligible_categories = [ 2, 3, 5, 18, 21, 33 ]
     po_items = []
 
     so_items.each do |item|
-      item_id = item.dig('item', 'id')
+      item_id = item.dig("item", "id")
       next unless item_id
 
       # Use raise_on_not_found: false to skip retries and return nil for non-inventory items
       inventory_item = Netsuite::InventoryItem.find(item_id, raise_on_not_found: false)
       next unless inventory_item.is_a?(Hash)
 
-      category = inventory_item.dig('custitem1', 'id')&.to_i
+      category = inventory_item.dig("custitem1", "id")&.to_i
       next unless eligible_categories.include?(category)
 
-      quantity = item['quantity'].to_i
+      quantity = item["quantity"].to_i
       next if quantity.zero?
 
-      part_number = inventory_item['itemId'] || inventory_item['name']
+      part_number = inventory_item["itemId"] || inventory_item["name"]
       po_items << {
         item_id: item_id,
         part_number: part_number,
@@ -535,7 +535,7 @@ class PoGenerationService
         quantity: quantity,
         category: category,
         category_name: category_name_for(category),
-        so_line_number: item['line']
+        so_line_number: item["line"]
       }
     end
 
@@ -557,49 +557,49 @@ class PoGenerationService
     return true if so_items.empty?
 
     psr_m168_item = so_items.find do |item|
-      item_id = item.dig('item', 'id')
+      item_id = item.dig("item", "id")
       next false unless item_id
 
       # Use raise_on_not_found: false to skip retries and return nil for non-inventory items
       inventory_item = Netsuite::InventoryItem.find(item_id, raise_on_not_found: false)
       next false unless inventory_item.is_a?(Hash)
 
-      part_number = inventory_item['itemId'] || inventory_item['name']
-      part_number == 'PSR-M168-US (DOMESTIC)'
+      part_number = inventory_item["itemId"] || inventory_item["name"]
+      part_number == "PSR-M168-US (DOMESTIC)"
     end
 
     return true unless psr_m168_item
 
-    quantity = psr_m168_item['quantity'].to_i
+    quantity = psr_m168_item["quantity"].to_i
     quantity <= 0
   end
 
   def location_name_for(location_id)
     {
-      1 => 'Austin',
-      2 => 'Houston',
-      3 => 'Dallas',
-      4 => 'San Antonio',
-      5 => 'Denver',
-      6 => 'Co Springs',
-      7 => 'Tampa',
-      17 => 'Norfolk',
-      18 => 'Orlando',
-      19 => 'Charlotte',
-      20 => 'Raleigh',
-      25 => 'HQ',
-      28 => 'Commercial'
+      1 => "Austin",
+      2 => "Houston",
+      3 => "Dallas",
+      4 => "San Antonio",
+      5 => "Denver",
+      6 => "Co Springs",
+      7 => "Tampa",
+      17 => "Norfolk",
+      18 => "Orlando",
+      19 => "Charlotte",
+      20 => "Raleigh",
+      25 => "HQ",
+      28 => "Commercial"
     }[location_id&.to_i] || "Location #{location_id}"
   end
 
   def category_name_for(category_id)
     {
-      2 => 'Modules',
-      3 => 'Racking',
-      5 => 'Monitoring',
-      18 => 'Energy Storage',
-      21 => 'Inverters'
-    }[category_id] || 'Other'
+      2 => "Modules",
+      3 => "Racking",
+      5 => "Monitoring",
+      18 => "Energy Storage",
+      21 => "Inverters"
+    }[category_id] || "Other"
   end
 
   def aggregate_items_across_projects(created_pos)
@@ -622,14 +622,14 @@ class PoGenerationService
     end
 
     # Sort by category then part number
-    item_totals.values.sort_by { |item| [item[:category] || 999, item[:part_number]] }
+    item_totals.values.sort_by { |item| [ item[:category] || 999, item[:part_number] ] }
   end
 
   public
 
   def generate_location_summary_pdf(location_pos, location_name)
-    require 'prawn'
-    require 'prawn/table'
+    require "prawn"
+    require "prawn/table"
 
     aggregated_items = aggregate_items_across_projects(location_pos)
 
@@ -645,18 +645,18 @@ class PoGenerationService
 
       # Aggregated items section
       pdf.font_size 16
-      pdf.text 'Aggregated Items', style: :bold
+      pdf.text "Aggregated Items", style: :bold
       pdf.move_down 10
 
-      aggregated_table = [['Part Number', 'Category', 'Total Quantity']]
+      aggregated_table = [ [ "Part Number", "Category", "Total Quantity" ] ]
       aggregated_items.each do |item|
-        aggregated_table << [item[:part_number], item[:category_name], item[:quantity].to_s]
+        aggregated_table << [ item[:part_number], item[:category_name], item[:quantity].to_s ]
       end
 
       pdf.font_size 10
       pdf.table(aggregated_table, header: true, width: pdf.bounds.width) do
         row(0).font_style = :bold
-        row(0).background_color = 'CCCCCC'
+        row(0).background_color = "CCCCCC"
         columns(2).align = :center
       end
 
@@ -667,7 +667,7 @@ class PoGenerationService
       # Individual project breakdowns
       pdf.start_new_page
       pdf.font_size 16
-      pdf.text 'Project Details', style: :bold
+      pdf.text "Project Details", style: :bold
       pdf.move_down 15
 
       location_pos.each_with_index do |po_data, index|
@@ -678,15 +678,15 @@ class PoGenerationService
         pdf.text "PO ID: #{po_data[:po_id]}"
         pdf.move_down 10
 
-        table_data = [['Part Number', 'Category', 'Quantity']]
+        table_data = [ [ "Part Number", "Category", "Quantity" ] ]
         po_data[:po_items].each do |item|
           category_name = category_name_for(item[:category])
-          table_data << [item[:part_number], category_name, item[:quantity].to_s]
+          table_data << [ item[:part_number], category_name, item[:quantity].to_s ]
         end
 
         pdf.table(table_data, header: true, width: pdf.bounds.width) do
           row(0).font_style = :bold
-          row(0).background_color = 'DDDDDD'
+          row(0).background_color = "DDDDDD"
           columns(2).align = :center
         end
 
@@ -701,18 +701,18 @@ class PoGenerationService
     filename = "#{po_data[:po_name]}.pdf"
 
     # Create a temporary file for the PDF
-    temp_file = Tempfile.new(['po', '.pdf'], binmode: true)
+    temp_file = Tempfile.new([ "po", ".pdf" ], binmode: true)
     temp_file.write(pdf_binary)
     temp_file.rewind
 
     # Prepare the document structure for Lightreach
     document = {
-      type: 'billOfMaterials',
+      type: "billOfMaterials",
       grouped: true,
       files: [
         {
-          'file' => temp_file,
-          'filename' => filename
+          "file" => temp_file,
+          "filename" => filename
         }
       ]
     }

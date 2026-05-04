@@ -9,6 +9,6 @@ class CreatePoGenerationLogs < ActiveRecord::Migration[7.2]
       t.timestamps
     end
 
-    add_index :po_generation_logs, [:po_generation_job_id, :created_at]
+    add_index :po_generation_logs, [ :po_generation_job_id, :created_at ]
   end
 end

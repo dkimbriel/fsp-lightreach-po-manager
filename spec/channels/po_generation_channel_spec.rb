@@ -127,7 +127,7 @@ RSpec.describe PoGenerationChannel, type: :channel do
       subscribe(job_id: job.id)
 
       log_messages = transmissions.select { |t| t[:message] }.map { |t| t[:message] }
-      expect(log_messages).to eq(['First', 'Second', 'Third'])
+      expect(log_messages).to eq([ 'First', 'Second', 'Third' ])
     end
   end
 end

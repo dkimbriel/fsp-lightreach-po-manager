@@ -1,13 +1,13 @@
 # Load Google::Gmail service
-require Rails.root.join('app/services/google.rb')
+require Rails.root.join("app/services/google.rb")
 
 module ActionMailer
   # Shared send_google implementation
   module GoogleMailer
     @@dev_environment_whitelist = [
-      'dkimbriel@gofreedompower.com',
-      'dkimbriel@freedomsolarpower.com',
-      'davidkimb92@gmail.com'
+      "dkimbriel@gofreedompower.com",
+      "dkimbriel@freedomsolarpower.com",
+      "davidkimb92@gmail.com"
     ]
 
     def send_google
@@ -23,7 +23,7 @@ module ActionMailer
 
       encoded_body = message.encoded
       encoded_body.prepend("Bcc: #{message.bcc[0]}\n") if message.bcc && message.bcc.length.positive?
-      from_account = message.from[0].gsub('freedomsolar.com', 'freedomsolarpower.com')
+      from_account = message.from[0].gsub("freedomsolar.com", "freedomsolarpower.com")
       Rails.logger.info "Sending email via Google from: #{from_account}"
       Google::Gmail.new(from_account).send_email_raw(encoded_body, from_account)
     end

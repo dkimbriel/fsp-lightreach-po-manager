@@ -4,7 +4,7 @@ RSpec.describe PoGenerationWorker, type: :worker do
   let(:user) { create(:user) }
   let(:project_id) { 'SF-12345' }
   let(:job) do
-    create(:po_generation_job, :single_job, project_ids: [project_id], user: user)
+    create(:po_generation_job, :single_job, project_ids: [ project_id ], user: user)
   end
   let(:service) { instance_double(PoGenerationService) }
   let(:email_service) { instance_double(EmailNotificationService) }
@@ -47,7 +47,7 @@ RSpec.describe PoGenerationWorker, type: :worker do
 
       expect(job.status).to eq('completed')
       expect(job.successful_pos).to eq(1)
-      expect(job.po_results).to eq([po_result])
+      expect(job.po_results).to eq([ po_result ])
       expect(job.completed_at).to be_present
     end
 

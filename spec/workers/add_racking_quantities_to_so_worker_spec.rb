@@ -144,7 +144,7 @@ RSpec.describe AddRackingQuantitiesToSoWorker, type: :worker do
 
     before do
       allow(PDF::Reader).to receive(:new).and_return(mock_reader)
-      allow(mock_reader).to receive(:pages).and_return([mock_page])
+      allow(mock_reader).to receive(:pages).and_return([ mock_page ])
     end
 
     it 'extracts Pegasus racking items with correct quantities' do
@@ -200,7 +200,7 @@ RSpec.describe AddRackingQuantitiesToSoWorker, type: :worker do
 
     before do
       allow(PDF::Reader).to receive(:new).and_return(mock_reader)
-      allow(mock_reader).to receive(:pages).and_return([mock_page])
+      allow(mock_reader).to receive(:pages).and_return([ mock_page ])
     end
 
     it 'finds items matching search string' do
@@ -322,7 +322,7 @@ RSpec.describe AddRackingQuantitiesToSoWorker, type: :worker do
   end
 
   describe '#add_envoy_items_to_so' do
-    let(:envoy_items) { [{ quantity: 2, description: 'Enphase Envoy' }] }
+    let(:envoy_items) { [ { quantity: 2, description: 'Enphase Envoy' } ] }
     let(:sales_order) do
       {
         'item' => {
@@ -390,7 +390,7 @@ RSpec.describe AddRackingQuantitiesToSoWorker, type: :worker do
     end
 
     context 'when HDK items are present' do
-      let(:hdk_items) { [{ quantity: 1, description: 'HomeRun Data Kit' }] }
+      let(:hdk_items) { [ { quantity: 1, description: 'HomeRun Data Kit' } ] }
 
       it 'adds Combiner-WIFI-5 item' do
         expect(Netsuite::SalesOrder).to receive(:update) do |so_id, body|

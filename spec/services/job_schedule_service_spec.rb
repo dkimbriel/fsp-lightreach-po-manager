@@ -216,7 +216,7 @@ RSpec.describe JobScheduleService do
   end
 
   describe '#batch_fetch_project_locations' do
-    let(:project_ids) { ['SF-001', 'SF-002'] }
+    let(:project_ids) { [ 'SF-001', 'SF-002' ] }
     let(:suiteql_result) do
       {
         'items' => [
@@ -341,7 +341,7 @@ RSpec.describe JobScheduleService do
     end
 
     it 'handles jobs without project IDs' do
-      jobs_with_nil = jobs + [{ 'node' => { 'Start' => '2025-03-15T10:00:00Z' } }]
+      jobs_with_nil = jobs + [ { 'node' => { 'Start' => '2025-03-15T10:00:00Z' } } ]
       expect { service.send(:filter_for_direct_pay, jobs_with_nil) }.not_to raise_error
     end
 
@@ -352,8 +352,8 @@ RSpec.describe JobScheduleService do
   end
 
   describe '#fetch_installations_on_schedule' do
-    let(:installation_jobs) { [{ 'node' => { 'ProjectSunriseID' => 'SF-001' } }] }
-    let(:powerwall_jobs) { [{ 'node' => { 'ProjectSunriseID' => 'SF-002' } }] }
+    let(:installation_jobs) { [ { 'node' => { 'ProjectSunriseID' => 'SF-001' } } ] }
+    let(:powerwall_jobs) { [ { 'node' => { 'ProjectSunriseID' => 'SF-002' } } ] }
 
     before do
       allow(SkeduloApi).to receive(:find_jobs).with('Installation', start_time: start_time, end_time: end_time).and_return(installation_jobs)

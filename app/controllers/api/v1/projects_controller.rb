@@ -6,7 +6,7 @@ module Api
         region = params[:region]
 
         if region.blank?
-          return render_error('Region parameter is required', status: :bad_request)
+          return render_error("Region parameter is required", status: :bad_request)
         end
 
         service = JobScheduleService.new
@@ -15,14 +15,14 @@ module Api
         # Transform projects into frontend-friendly format
         formatted_projects = projects.map do |project|
           {
-            id: project['_id'],
-            name: project['name'],
-            loan_application_id: project.dig('fields', 'loan_application_id'),
-            system_size: project.dig('fields', 'system_size'),
-            lender: project.dig('fields', 'lender'),
-            job_start: project['job_start'],
-            po_link: project.dig('fields', 'lightreach_direct_pay_po_link'),
-            has_po: project.dig('fields', 'lightreach_direct_pay_po_link').present?
+            id: project["_id"],
+            name: project["name"],
+            loan_application_id: project.dig("fields", "loan_application_id"),
+            system_size: project.dig("fields", "system_size"),
+            lender: project.dig("fields", "lender"),
+            job_start: project["job_start"],
+            po_link: project.dig("fields", "lightreach_direct_pay_po_link"),
+            has_po: project.dig("fields", "lightreach_direct_pay_po_link").present?
           }
         end
 
@@ -42,30 +42,30 @@ module Api
         project_id = params[:id]
 
         fields = [
-          'name',
-          'fields.lightreach_direct_pay_po_link',
-          'fields.loan_application_id',
-          'fields.system_size',
-          'fields.lender',
-          'fields.market_region'
+          "name",
+          "fields.lightreach_direct_pay_po_link",
+          "fields.loan_application_id",
+          "fields.system_size",
+          "fields.lender",
+          "fields.market_region"
         ]
 
-        result = ProjectSunriseApi.get_projects_bulk([project_id], fields: fields)
-        project = result['items']&.first
+        result = ProjectSunriseApi.get_projects_bulk([ project_id ], fields: fields)
+        project = result["items"]&.first
 
         unless project
-          return render_error('Project not found', status: :not_found)
+          return render_error("Project not found", status: :not_found)
         end
 
         formatted_project = {
-          id: project['_id'],
-          name: project['name'],
-          loan_application_id: project.dig('fields', 'loan_application_id'),
-          system_size: project.dig('fields', 'system_size'),
-          lender: project.dig('fields', 'lender'),
-          market_region: project.dig('fields', 'market_region'),
-          po_link: project.dig('fields', 'lightreach_direct_pay_po_link'),
-          has_po: project.dig('fields', 'lightreach_direct_pay_po_link').present?
+          id: project["_id"],
+          name: project["name"],
+          loan_application_id: project.dig("fields", "loan_application_id"),
+          system_size: project.dig("fields", "system_size"),
+          lender: project.dig("fields", "lender"),
+          market_region: project.dig("fields", "market_region"),
+          po_link: project.dig("fields", "lightreach_direct_pay_po_link"),
+          has_po: project.dig("fields", "lightreach_direct_pay_po_link").present?
         }
 
         render_success({ project: formatted_project })
