@@ -13,10 +13,6 @@ class ElasticSearchSunrise
     @@service = 'LGipM'
 
     @@organization_id = Rails.application.credentials.PROJECT_SUNRISE[:ORG_ID]
-    @@credentials = Aws::Credentials.new(
-        Rails.application.credentials.aws_key_id,
-        Rails.application.credentials.aws_secret_key
-    )
 
     @@config = {
         url: @@url,
@@ -63,12 +59,18 @@ class ElasticSearchSunrise
     attr_accessor :client
 
     def initialize(worker: nil)
+        # Create credentials at runtime to ensure Rails credentials are loaded
+        credentials = Aws::Credentials.new(
+            Rails.application.credentials.aws_key_id,
+            Rails.application.credentials.aws_secret_key
+        )
+
         @client = Elasticsearch::Client.new(@@config) do |f|
             f.request :aws_sigv4,
                       service_name: 'es',
                       service: 'es',
                       region: 'us-west-2',
-                      credentials: @@credentials
+                      credentials: credentials
         end
     end
 
