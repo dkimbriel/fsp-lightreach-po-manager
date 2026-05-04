@@ -27,8 +27,9 @@ class JobScheduleService
   private
 
   def fetch_installations_on_schedule
-    start_time = Time.now.end_of_week
-    end_time = Time.now.end_of_week + 7.days
+    # Fetch jobs from today through the end of next week
+    start_time = Time.now.beginning_of_day
+    end_time = (Time.now + 1.week).end_of_week
 
     installation_jobs = SkeduloApi.find_jobs('Installation', start_time: start_time, end_time: end_time)
     powerwall_jobs = SkeduloApi.find_jobs('Tesla Powerwall', start_time: start_time, end_time: end_time)

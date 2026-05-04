@@ -439,7 +439,8 @@ class AddRackingQuantitiesToSoWorker
         inventory_item = Netsuite::InventoryItem.find(item_id)
         cache[item_id] = inventory_item
       rescue StandardError => e
-        puts "Warning: Could not fetch inventory item #{item_id}: #{e.message}"
+        # Skip logging for non-inventory items (serviceitem, discountitem, etc.)
+        puts "Warning: Could not fetch inventory item #{item_id}: #{e.message}" unless e.message.include?('The record you are attempting to load has a different type')
         cache[item_id] = nil
       end
     end

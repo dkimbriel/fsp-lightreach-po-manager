@@ -14,6 +14,7 @@ import ManualProjectInput from './ManualProjectInput';
 
 export default function RegionView({ region }) {
   const [projects, setProjects] = useState([]);
+  const [selectedProjects, setSelectedProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeJobId, setActiveJobId] = useState(null);
@@ -31,7 +32,10 @@ export default function RegionView({ region }) {
       const data = await response.json();
 
       if (data.success) {
-        setProjects(data.data.projects);
+        const fetchedProjects = data.data.projects;
+        setProjects(fetchedProjects);
+        // Select all projects by default
+        setSelectedProjects(fetchedProjects.map(p => p.id));
       } else {
         setError(data.error || 'Failed to fetch projects');
       }
@@ -43,18 +47,23 @@ export default function RegionView({ region }) {
   };
 
   const handleGenerateRegion = async () => {
-    if (!confirm(`Generate POs for all ${projects.length} projects in ${region}?`)) {
+    if (selectedProjects.length === 0) {
+      alert('Please select at least one project');
+      return;
+    }
+
+    if (!confirm(`Generate POs for ${selectedProjects.length} selected project(s) in ${region}?`)) {
       return;
     }
 
     try {
-      const response = await fetch('/api/v1/po_generation/region', {
+      const response = await fetch('/api/v1/po_generation/batch', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content,
         },
-        body: JSON.stringify({ region }),
+        body: JSON.stringify({ project_ids: selectedProjects }),
       });
 
       const data = await response.json();
@@ -66,6 +75,22 @@ export default function RegionView({ region }) {
       }
     } catch (err) {
       setError('Network error: ' + err.message);
+    }
+  };
+
+  const handleToggleProject = (projectId) => {
+    setSelectedProjects(prev =>
+      prev.includes(projectId)
+        ? prev.filter(id => id !== projectId)
+        : [...prev, projectId]
+    );
+  };
+
+  const handleToggleAll = (projectIds) => {
+    if (selectedProjects.length === projectIds.length) {
+      setSelectedProjects([]);
+    } else {
+      setSelectedProjects(projectIds);
     }
   };
 
@@ -122,21 +147,24 @@ export default function RegionView({ region }) {
         <>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, gap: 3 }}>
             <Typography variant="h5">
-              {region} - {projects.length} Projects on Schedule
+              {region} - {projects.length} Projects on Schedule ({selectedProjects.length} selected)
             </Typography>
             <Button
               variant="contained"
               color="primary"
               startIcon={<PlayArrowIcon />}
               onClick={handleGenerateRegion}
-              disabled={projects.length === 0}
+              disabled={selectedProjects.length === 0}
             >
-              Generate All POs for {region}
+              Generate POs for {selectedProjects.length} Selected Project{selectedProjects.length !== 1 ? 's' : ''}
             </Button>
           </Box>
 
           <ProjectList
             projects={projects}
+            selectedProjects={selectedProjects}
+            onToggleProject={handleToggleProject}
+            onToggleAll={handleToggleAll}
             onGenerateSingle={handleGenerateSingle}
           />
 

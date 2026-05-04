@@ -11,12 +11,13 @@ import {
   Chip,
   Link,
   Box,
+  Checkbox,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 
-export default function ProjectList({ projects, onGenerateSingle }) {
+export default function ProjectList({ projects, onGenerateSingle, selectedProjects, onToggleProject, onToggleAll }) {
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString();
@@ -37,11 +38,21 @@ export default function ProjectList({ projects, onGenerateSingle }) {
     return new Date(a.job_start) - new Date(b.job_start);
   });
 
+  const allSelected = sortedProjects.length > 0 && sortedProjects.every(p => selectedProjects.includes(p.id));
+  const someSelected = sortedProjects.some(p => selectedProjects.includes(p.id));
+
   return (
     <TableContainer component={Paper}>
       <Table>
         <TableHead>
           <TableRow>
+            <TableCell padding="checkbox">
+              <Checkbox
+                checked={allSelected}
+                indeterminate={someSelected && !allSelected}
+                onChange={() => onToggleAll(sortedProjects.map(p => p.id))}
+              />
+            </TableCell>
             <TableCell>Project ID</TableCell>
             <TableCell>Project Name</TableCell>
             <TableCell>Loan App ID</TableCell>
@@ -54,6 +65,12 @@ export default function ProjectList({ projects, onGenerateSingle }) {
         <TableBody>
           {sortedProjects.map((project) => (
             <TableRow key={project.id} hover>
+              <TableCell padding="checkbox">
+                <Checkbox
+                  checked={selectedProjects.includes(project.id)}
+                  onChange={() => onToggleProject(project.id)}
+                />
+              </TableCell>
               <TableCell>
                 <Link
                   href={`https://sunrise.gofreedompower.com/residential/projects/${project.id}/pulse`}

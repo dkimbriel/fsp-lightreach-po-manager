@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
+import CancelIcon from '@mui/icons-material/Cancel';
 import LogViewer from './LogViewer';
 import { createConsumer } from '@rails/actioncable';
 
@@ -17,6 +18,7 @@ export default function POGenerationProgress({ jobId, onComplete }) {
   const [job, setJob] = useState(null);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     fetchJobStatus();
@@ -66,6 +68,37 @@ export default function POGenerationProgress({ jobId, onComplete }) {
       console.error('Failed to fetch job status:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!confirm('Are you sure you want to cancel this PO generation?')) {
+      return;
+    }
+
+    setCancelling(true);
+    try {
+      const response = await fetch(`/api/v1/po_generation/cancel/${jobId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content,
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // The job status will be updated via ActionCable
+        onComplete?.();
+      } else {
+        alert(`Failed to cancel job: ${data.error}`);
+      }
+    } catch (err) {
+      console.error('Failed to cancel job:', err);
+      alert('Failed to cancel job');
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -127,12 +160,26 @@ export default function POGenerationProgress({ jobId, onComplete }) {
             </Box>
 
             {job.status === 'running' && (
-              <LinearProgress
-                variant="determinate"
-                value={calculateProgress()}
-                color={getStatusColor()}
-                sx={{ mb: 2, height: 8, borderRadius: 1 }}
-              />
+              <>
+                <LinearProgress
+                  variant="determinate"
+                  value={calculateProgress()}
+                  color={getStatusColor()}
+                  sx={{ mb: 2, height: 8, borderRadius: 1 }}
+                />
+                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    size="small"
+                    startIcon={<CancelIcon />}
+                    onClick={handleCancel}
+                    disabled={cancelling}
+                  >
+                    {cancelling ? 'Cancelling...' : 'Cancel Job'}
+                  </Button>
+                </Box>
+              </>
             )}
 
             {job.error_message && (

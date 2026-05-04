@@ -171,6 +171,42 @@ module Api
         render_error("Failed to fetch job status: #{e.message}", status: :internal_server_error)
       end
 
+      # POST /api/v1/po_generation/cancel/:id
+      # Cancels a running PO generation job
+      def cancel
+        job_id = params[:id]
+
+        if job_id.blank?
+          return render_error('Job ID is required', status: :bad_request)
+        end
+
+        job = PoGenerationJob.find(job_id)
+
+        unless job.running?
+          return render_error('Can only cancel running jobs', status: :bad_request)
+        end
+
+        # Mark job as failed/cancelled
+        job.update!(
+          status: 'failed',
+          error_message: 'Job cancelled by user',
+          completed_at: Time.current,
+          locked_at: nil,
+          locked_by: nil
+        )
+
+        render_success({
+          message: 'Job cancelled successfully',
+          job_id: job.id
+        })
+      rescue ActiveRecord::RecordNotFound
+        render_error('Job not found', status: :not_found)
+      rescue StandardError => e
+        Rails.logger.error("Error cancelling job: #{e.message}")
+        Rails.logger.error(e.backtrace.join("\n"))
+        render_error("Failed to cancel job: #{e.message}", status: :internal_server_error)
+      end
+
       # POST /api/v1/po_generation/resend_email
       # Resends email for a completed PO generation job
       def resend_email

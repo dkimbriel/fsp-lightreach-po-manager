@@ -408,7 +408,10 @@ class PoGenerationService
         so_line_number: item['line']
       }
     rescue StandardError => e
-      log_progress("Could not fetch inventory item #{item_id}: #{e.message}", level: :warning)
+      # Skip logging for non-inventory items (serviceitem, discountitem, etc.)
+      unless e.message.include?('The record you are attempting to load has a different type')
+        log_progress("Could not fetch inventory item #{item_id}: #{e.message}", level: :warning)
+      end
       next
     end
 
@@ -514,7 +517,10 @@ class PoGenerationService
           so_line_number: item['line']
         }
       rescue StandardError => e
-        log_progress("Could not fetch inventory item #{item_id}: #{e.message}", level: :warning)
+        # Skip logging for non-inventory items (serviceitem, discountitem, etc.)
+        unless e.message.include?('The record you are attempting to load has a different type')
+          log_progress("Could not fetch inventory item #{item_id}: #{e.message}", level: :warning)
+        end
         next
       end
     end
@@ -524,7 +530,7 @@ class PoGenerationService
 
   def add_racking_quantities_to_so(project_id)
     log_progress("Running racking quantities worker for #{project_id}")
-    Accounting::AddRackingQuantitiesToSoWorker.new.perform(project_id, skip_status_check: true)
+    AddRackingQuantitiesToSoWorker.new.perform(project_id, skip_status_check: true)
   rescue StandardError => e
     log_progress("Error adding racking quantities: #{e.message}", level: :warning)
   end

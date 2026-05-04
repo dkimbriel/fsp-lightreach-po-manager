@@ -28,7 +28,10 @@ class PoGenerationWorker
       )
 
       # Send email unless skipped
-      EmailNotificationService.new(job).send_batch_email unless skip_email
+      unless skip_email
+        service.log_progress("Sending email notification for PO #{po_result[:po_id]}")
+        EmailNotificationService.new(job).send_single_email(po_result)
+      end
     else
       job.update!(
         status: 'failed',

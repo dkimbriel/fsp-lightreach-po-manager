@@ -24,6 +24,7 @@ Rails.application.routes.draw do
       post 'po_generation/project', to: 'po_generation#generate_single'
       post 'po_generation/batch', to: 'po_generation#generate_batch'
       get 'po_generation/jobs/:id', to: 'po_generation#job_status'
+      post 'po_generation/cancel/:id', to: 'po_generation#cancel'
       post 'po_generation/resend_email', to: 'po_generation#resend_email'
     end
   end
