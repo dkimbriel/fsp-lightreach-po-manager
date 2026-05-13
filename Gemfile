@@ -45,6 +45,7 @@ gem "google-apis-gmail_v1", "~> 0.1"
 # Error tracking
 gem "sentry-ruby"
 gem "sentry-rails"
+gem "sentry-sidekiq"
 
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
